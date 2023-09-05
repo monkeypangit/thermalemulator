@@ -1,7 +1,7 @@
-import * as THREE from 'three';
-import { OrbitControls } from 'OrbitControls';
-import { GLTFLoader } from 'GLTFLoader';
-import { RGBELoader } from 'RGBELoader';
+import * as THREE from '/external/three/three.module.js';
+import { OrbitControls } from '/external/three/OrbitControls.js';
+import { GLTFLoader } from '/external/three/GLTFLoader.js';
+import { RGBELoader } from '/external/three/RGBELoader.js';
 
 let scene, cube, camera, renderer, controls;
 let surfaceTextures = [];
@@ -27,7 +27,7 @@ export function initializeScene(domElement) {
     controls.maxDistance = 1.0;
 
     controls.rotateSpeed = 0.55;
-    controls.dampingFactor = 0.1;
+    controls.dampingFactor = 0.05;
     controls.enableDamping = true;
 
     controls.enablePan = false;

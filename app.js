@@ -1,10 +1,10 @@
-import { initializeScene } from 'Visualization';
-import { updateVisualization } from 'Visualization';
-import { resizeCanvas } from 'Visualization';
-import { initializeVisualization } from 'Visualization';
-import { initializeSimulation } from 'Simulation';
-import { updateSimulation } from 'Simulation';
-import { getTemperatures } from 'Simulation';
+import { initializeScene } from '/modules/visualization.js';
+import { updateVisualization } from '/modules/visualization.js';
+import { resizeCanvas } from '/modules/visualization.js';
+import { initializeVisualization } from '/modules/visualization.js';
+import { initializeSimulation } from '/modules/simulation.js';
+import { updateSimulation } from '/modules/simulation.js';
+import { getTemperatures } from '/modules/simulation.js';
 
 
 
