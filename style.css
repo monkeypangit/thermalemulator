@@ -1,0 +1,9 @@
+
+.layout                                 { position: absolute; width: 100%; display: flex; justify-content: space-between; }
+
+.parameter-column                       { width: 400px; display: flex; flex-direction: column; color: #fff; margin: 20px; }
+h3.parameter-row-header                 { margin: 10px 0px 4px 0px; padding: 0 }
+x-parameter                             { width: 400px; display: flex; justify-content: space-between; align-items: center; }
+.range-widget                           { display: flex; flex-direction: row; align-items: center; justify-content: flex-start; }
+.parameter-button                       { border: 0px; padding: 0px; margin: 0px; width: 20px; height: 20px; border-radius: 10px; }
+.parameter-range                        { padding: 0px; margin: 4px; }

@@ -36,7 +36,7 @@ export function initializeSimulation(w, h, d, cX, cY, cZ, hW, hH, hP) {
 
     if (simulationKernel != undefined) {
         simulationKernel.destroy();
-        gpu.destroy();
+        //gpu.destroy();
     }
 
     initializeGpu();
@@ -121,11 +121,14 @@ function toGridIndex(x, y, z) {
 
 // Create GPU kernel for calculating heat exchange
 function initializeGpu() {
-    try {
-        gpu = new GPU();
-      } catch (error) {
-        gpu = new GPU.GPU();
-      }
+    if (gpu == undefined) {
+        try {
+            gpu = new GPU();
+        } catch (error) {
+            gpu = new GPU.GPU();
+        }
+    }
+    
     simulationKernel = gpu.createKernel(function (temps, conds, heatCapacities, heatInput, dt, width, height, depth, cubeSizeX, cubeSizeY, cubeSizeZ) {
         const surfConv = 8; // Coefficient of surface convection
         const kSb = 0.0000000567; // Stefan-Boltzmann constant

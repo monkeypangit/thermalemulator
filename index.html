@@ -2,8 +2,8 @@
 <html lang='en'>
  <head>
     <meta charset='utf-8'>
-    <title>3D Thermal Simulation</title>
-
+    <link rel="stylesheet" href="style.css">
+    <title>Build plate thermal simulation</title>
     <script type="importmap">
         {
             "imports": {
@@ -22,40 +22,40 @@
 <body style="margin: 0; padding:0; font-family: sans-serif;">
     <div style="position: relative;">
         <div id="simulation" style="position: absolute"></div>
-        <div id="ui" style="position: absolute; width: 100%; display: flex; justify-content: space-between;">
-            <div id="left_panel">
+        <div id="ui" class="layout">
+            <div>
                 <div style="display: flex; flex-direction: row;">
                     <button id="startSimulationButton">Play</button>
                     <button id="pauseSimulationButton">Pause</button>
                     <button id="stepSimulationButton">Step</button>
                     <button id="resetSimulationButton">Reset</button>
                 </div>
-                <div style="display: flex; flex-direction: column; color: #fff;">
+                <div class="parameter-column">
                     <div id="timer">Seconds:</div>
-                    <h3 style="margin: 10px 0px 4px 0px; padding: 0;">Build surface</h3>
+                    <h3 class="parameter-row-header">Build surface (°C)</h3>
                     <div id="temperature-center"></div>
                     <div id="temperature-edge"></div>
                     <div id="temperature-corner"></div>
-                    <h3 style="margin: 10px 0px 4px 0px; padding: 0;">Build plate</h3>
+                    <h3 class="parameter-row-header">Build plate (°C)</h3>
                     <div id="temperature-core"></div>
-                    <h3 style="margin: 10px 0px 4px 0px; padding: 0;">Thermistors</h3>
+                    <h3 class="parameter-row-header">Thermistors (°C)</h3>
                     <div id="temperature-thermistor"></div>
                     <div id="temperature-heater"></div>
                 </div>
             </div>
-            <div id="right_panel" style="width: 400px; display: flex; flex-direction: column; color: #fff;">
-                <h3 style="margin: 10px 0px 4px 0px; padding: 0;">Build plate</h3>
-                <div style="width: 400px; display: flex; justify-content: space-between;"><span id="plate_width_label"></span><input id="plate_width" type="range" min="100" max="400" step="5" value="250"></div>
-                <div style="width: 400px; display: flex; justify-content: space-between;"><span id="plate_height_label"></span><input id="plate_height" type="range" min="100" max="400" step="5" value="250"></div>
-                <div style="width: 400px; display: flex; justify-content: space-between;"><span id="plate_depth_label"></span><input id="plate_depth" type="range" min="4" max="10" step="2" value="8"></div>
-                <h3 style="margin: 10px 0px 4px 0px; padding: 0;">Heater</h3>
-                <div style="width: 400px; display: flex; justify-content: space-between;"><span id="heater_width_label"></span><input id="heater_width" type="range" min="100" max="400" step="5" value="200"></div>
-                <div style="width: 400px; display: flex; justify-content: space-between;"><span id="heater_height_label"></span><input id="heater_height" type="range" min="100" max="400" step="5" value="200"></div>
-                <div style="width: 400px; display: flex; justify-content: space-between;"><span id="heater_power_label"></span><input id="heater_power" type="range" min="0.1" max="2" step="0.05" value="0.4"></div>
+            <div class="parameter-column">
+                <h3 class="parameter-row-header">Build plate</h3>
+                <x-parameter id="plate_width_parameter"></x-parameter>
+                <x-parameter id="plate_height_parameter"></x-parameter>
+                </span><x-parameter id="plate_depth_parameter"></x-parameter>
+                <h3 class="parameter-row-header">Heater</h3>
+                <x-parameter id="heater_width_parameter"></x-parameter>
+                <x-parameter id="heater_height_parameter"></x-parameter>
+                <x-parameter id="heater_power_parameter"></x-parameter>
                 <div><span id="heater_power_total_label"></span></div>
                 <div><span>Heater thickness (2 mm)</div>
 
-                <h3 style="margin: 10px 0px 4px 0px; padding: 0;">Magnetic build surface</h3>
+                <h3 class="parameter-row-header">Magnetic build surface</h3>
                 <div>Magnetic sticker thickness (2mm)</div>
                 <div>No PEI spring steel sheet yet</div>
                 </br>

@@ -6,8 +6,6 @@ import { initializeSimulation } from '/modules/simulation.js';
 import { updateSimulation } from '/modules/simulation.js';
 import { getTemperatures } from '/modules/simulation.js';
 
-
-
 let timer = 0;
 let isPaused = true;
 let stepOnce = false;
@@ -37,39 +35,43 @@ function init() {
     document.getElementById('stepSimulationButton').addEventListener('click', () => stepOnce = true);
     document.getElementById('resetSimulationButton').addEventListener('click', resetSimulation);
 
-    plate_width = document.getElementById('plate_width');
-    plate_height = document.getElementById('plate_height');
-    plate_depth = document.getElementById('plate_depth');
+    [plate_width, plate_width_label] = inflateParamter('plate_width', 100, 400, 5, 250);
+    [plate_height, plate_height_label] = inflateParamter('plate_height', 100, 400, 5, 250);
+    [plate_depth, plate_depth_label] = inflateParamter('plate_depth', 4, 10, 2, 8);
 
-    heater_width = document.getElementById('heater_width');
-    heater_height = document.getElementById('heater_height');
-    heater_power = document.getElementById('heater_power');
+    [heater_width, heater_width_label]= inflateParamter('heater_width', 100, 400, 5, 200);
+    [heater_height, heater_height_label]= inflateParamter('heater_height', 100, 400, 5, 200);
+    [heater_power, heater_power_label]= inflateParamter('heater_power', 0.1, 2, 0.05, 0.4);
 
-    plate_width.addEventListener('change', () => resetSimulation());
-    plate_height.addEventListener('change', () => resetSimulation());
-    plate_depth.addEventListener('change', () => resetSimulation());
-
-    heater_width.addEventListener('change', () => resetSimulation());
-    heater_height.addEventListener('change', () => resetSimulation());
-    heater_power.addEventListener('change', () => resetSimulation());
-
-
-    plate_width_label = document.getElementById('plate_width_label');
-    plate_height_label = document.getElementById('plate_height_label');
-    plate_depth_label = document.getElementById('plate_depth_label');
-
-    heater_width_label = document.getElementById('heater_width_label');
-    heater_height_label = document.getElementById('heater_height_label');
-    heater_power_label = document.getElementById('heater_power_label');
     heater_power_total_label = document.getElementById('heater_power_total_label');
 
-    var rootElement = document.getElementById('simulation');
+    let rootElement = document.getElementById('simulation');
     initializeScene(rootElement);
 
     resetSimulation();
     updateLabels();
 }
 
+function inflateParamter(parameter_name, min, max, step, value) {
+    document.getElementById(parameter_name+'_parameter').innerHTML = `
+    <span id="${parameter_name}_label"></span>
+    <div class="range-widget">
+    <button id="${parameter_name}_decrease" class="parameter-button">-</button>
+    <input class="parameter-range" id="${parameter_name}" type="range" min="${min}" max="${max}" step="${step}" value="${value}">
+    <button id="${parameter_name}_increase" class="parameter-button">+</button>
+    </div>`;
+
+    let paramEl = document.getElementById(parameter_name);
+    let paramLabelEl = document.getElementById(parameter_name + "_label");
+
+    paramEl.addEventListener('change', resetSimulation); 
+    paramEl.addEventListener('input', resetSimulation);
+    
+    document.getElementById(parameter_name+"_decrease").addEventListener('click', () => { paramEl.value = Number(paramEl.value) - step; resetSimulation(); });
+    document.getElementById(parameter_name+"_increase").addEventListener('click', () => { paramEl.value = Number(paramEl.value) + step; resetSimulation(); });
+
+    return [paramEl, paramLabelEl];
+}
 
 function resetSimulation() {
     isPaused = true;
