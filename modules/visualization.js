@@ -1,7 +1,6 @@
 import * as THREE from '/external/three/three.module.js';
 import { OrbitControls } from '/external/three/OrbitControls.js';
 import { GLTFLoader } from '/external/three/GLTFLoader.js';
-import { RGBELoader } from '/external/three/RGBELoader.js';
 
 let scene, cube, camera, renderer, controls;
 let surfaceTextures = [];
@@ -32,7 +31,7 @@ export function initializeScene(domElement) {
 
     controls.enablePan = false;
 
-    addGridPlane();
+    loadSceneGeometry();
 
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
@@ -44,36 +43,38 @@ export function initializeScene(domElement) {
     scene.add(skysphere);
 
     // Add directional light
-    const light = new THREE.SpotLight(0xffffff, 0.6);
-    light.position.set(0, 1, 0);
-    light.castShadow = true;
-    light.penumbra = 0.5;
-    light.angle = Math.PI / 12;
-    light.shadow.mapSize.width = 1024;
-    light.shadow.mapSize.height = 1024;
-    light.shadow.camera.near = 0.1;
-    light.shadow.camera.far = 2;
-    light.shadow.camera.fov = 35;
-    light.shadow.bias = -0.001;
-    light.shadow.radius = 5;
-    light.shadow.blurSamples = 25;
-    scene.add(light);
+    const mainLight = new THREE.SpotLight(0xffffff, 0.6, 0, Math.PI / 12, 0.5);
+    mainLight.position.set(0, 1, 0);
+    mainLight.castShadow = true;
+    mainLight.shadow.mapSize.width = 1024;
+    mainLight.shadow.mapSize.height = 1024;
+    mainLight.shadow.camera.near = 0.1;
+    mainLight.shadow.camera.far = 2;
+    mainLight.shadow.camera.fov = 35;
+    mainLight.shadow.bias = -0.001;
+    mainLight.shadow.radius = 5;
+    mainLight.shadow.blurSamples = 25;
+    scene.add(mainLight);
 
-    let envPath = 'empty_workshop_1k.hdr';
+    const fillLight1 = new THREE.SpotLight(0xffffff, 0.1, 0, Math.PI / 12, 0.5);
+    fillLight1.position.set(1, 1, 1);
+    scene.add(fillLight1);
 
-    let pmremGenerator = new THREE.PMREMGenerator(renderer);
-    pmremGenerator.compileEquirectangularShader();
+    const fillLight2 = new THREE.SpotLight(0xffffff, 0.1, 0, Math.PI / 12, 0.5);
+    fillLight2.position.set(-1, 1, 1);
+    scene.add(fillLight2);
 
-    new RGBELoader()
-        .setDataType(THREE.FloatType)
-        .load(envPath, (texture) => {
-            let envMap = pmremGenerator.fromEquirectangular(texture).texture;
-            pmremGenerator.dispose();
-            texture.dispose();
-            scene.environment = envMap;
-            //scene.background = envMap;
-        });
-        
+    const fillLight3 = new THREE.SpotLight(0xffffff, 0.1, 0, Math.PI / 12, 0.5);
+    fillLight3.position.set(1, 1, -1);
+    scene.add(fillLight3);
+
+    const fillLight4 = new THREE.SpotLight(0xffffff, 0.1, 0, Math.PI / 12, 0.5);
+    fillLight4.position.set(-1, 1, -1);
+    scene.add(fillLight4);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+    scene.add(ambientLight);
+
     camera.position.set(-0.2, 0.3, 0.5);
     domElement.appendChild(renderer.domElement);
 }
@@ -159,7 +160,7 @@ function createGradientSkysphere() {
     return mesh;
 }
 
-function addGridPlane() {
+function loadSceneGeometry() {
     const loader = new GLTFLoader();
     let yPosition = -0.05
 
@@ -169,8 +170,6 @@ function addGridPlane() {
         'deskmat.gltf',
         // called when the resource is loaded
         function (gltf) {
-
-            //gltf.scene.rotateX(Math.PI/2);
             gltf.scene.position.y = yPosition;
 
             gltf.scene.traverse(node => {
@@ -181,13 +180,6 @@ function addGridPlane() {
             });
 
             scene.add(gltf.scene);
-
-            gltf.animations; // Array<THREE.AnimationClip>
-            gltf.scene; // THREE.Group
-            gltf.scenes; // Array<THREE.Group>
-            gltf.cameras; // Array<THREE.Camera>
-            gltf.asset; // Object
-
         },
         // called while loading is progressing
         function (xhr) {
@@ -262,7 +254,6 @@ function colorFromTemperature(temperature) {
     const minTemp = 20;
     const maxTemp = 115;
 
-    // Thermal imaging color scale
     const percent = (Math.max(Math.min(temperature, maxTemp), minTemp) - minTemp) / maxTemp;
 
     var x = 433 * percent;

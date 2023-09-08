@@ -1,7 +1,7 @@
 const stepSize = 1; // Simulation step size in seconds
 const iterationsPerTimestep = 100;
 
-let ambientTemperature = 22;
+let ambientTemperature;
 
 let temperatures;
 let heatInput;
@@ -34,7 +34,10 @@ export function getTemperatures() {
     return temperatures;
 }
 
-export function initializeSimulation(w, h, d, cX, cY, cZ, hW, hH, hP) {
+export function initializeSimulation(w, h, d, cX, cY, cZ, hW, hH, hP, Ta) {
+
+    ambientTemperature = Ta;
+
     width = w;
     height = h;
     depth = d;
@@ -117,10 +120,10 @@ export function updateSimulation() {
         }
     }
 
-    let temperaturesTexture = simulationKernel(temperatures, conductivities, heatCapacities, heatInput, dt, width, height, depth, cubeSizeX, cubeSizeY, cubeSizeZ);
+    let temperaturesTexture = simulationKernel(temperatures, conductivities, heatCapacities, heatInput, dt, width, height, depth, cubeSizeX, cubeSizeY, cubeSizeZ, ambientTemperature);
 
     for (let iter = 0; iter < iterationsPerTimestep - 1; iter++) {
-        let temp = simulationKernel(temperaturesTexture, conductivities, heatCapacities, heatInput, dt, width, height, depth, cubeSizeX, cubeSizeY, cubeSizeZ);
+        let temp = simulationKernel(temperaturesTexture, conductivities, heatCapacities, heatInput, dt, width, height, depth, cubeSizeX, cubeSizeY, cubeSizeZ, ambientTemperature);
         temperaturesTexture.delete();
         temperaturesTexture = temp;
     }
@@ -148,12 +151,12 @@ function initializeGpu() {
         }
     }
     
-    simulationKernel = gpu.createKernel(function (temps, conds, heatCapacities, heatInput, dt, width, height, depth, cubeSizeX, cubeSizeY, cubeSizeZ) {
+    simulationKernel = gpu.createKernel(function (temps, conds, heatCapacities, heatInput, dt, width, height, depth, cubeSizeX, cubeSizeY, cubeSizeZ, ambientTemparature) {
         const surfConv = 8; // Coefficient of surface convection
         const kSb = 0.0000000567; // Stefan-Boltzmann constant
         const e = 0.9; // Surface Emissivity Coefficient
 
-        const Ta = 22; // ambient temperature
+        const Ta = ambientTemparature; // ambient temperature
         const Ta2 = (Ta + 273) * (Ta + 273);
         const Ta4 = Ta2 * Ta2; // Ambient temperature in K raised to the power of 4
 

@@ -1,11 +1,18 @@
+body                                    { pointer-events: none; position: relative; margin: 0; padding:0; font-family: sans-serif; }
+.layout                                 { width: 100%; position: absolute; font-size: medium; display: flex; flex-direction: column; justify-content: space-between; align-items: center; }
 
-.layout                                 { position: absolute; width: 100%; display: flex; justify-content: space-between; font-size: medium; }
+.simulation                             { position: absolute; pointer-events: all; }
 
-.parameter-column                       { width: 400px; display: flex; flex-direction: column; color: #fff; margin: 20px; }
-h3.parameter-row-header                 { margin: 10px 0px 4px 0px; padding: 0 }
-x-parameter                             { width: 400px; display: flex; justify-content: space-between; align-items: center; }
-.range-widget                           { display: flex; flex-direction: row; align-items: center; justify-content: flex-start; }
-.parameter-button                       { border: 0px; padding: 0px; margin: 0px; width: 20px; height: 20px; border-radius: 10px; }
-.parameter-range                        { padding: 0px; margin: 4px; }
+.simulation-button-row                  { display: flex; flex-direction: row; }
+.simulation-button                      { pointer-events: all; font-size: medium; width: 5em; height: 2em; border: 0; padding: 0; margin: 1em; border-radius: 1em; }
 
-.version-number                         { font-size: small; }
+.parameter-section                      { width: 100%; display: flex; flex-direction: row; justify-content: space-between; }
+.parameter-column                       { display: flex; flex-direction: column; color: #fff; margin: 20px; font-size: small; }
+h3.parameter-row-header                 { margin: 1.2em 0 0 0; padding: 0; }
+x-parameter                             { margin: 0.5em 0 0 0; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-start; }
+.missing-parameter                      { margin: 0.5em 0; }
+.range-widget                           { width: 100%; pointer-events: all; display: flex; flex-direction: row; align-items: center; justify-content: flex-start; margin: 0.1em 0 0 0; }
+.parameter-button                       { pointer-events: all; border: 0; padding: 0; margin: 0; width: 1.5em; height: 1.5em; border-radius: 1.25em; }
+.parameter-range                        { padding: 0; margin: 0 0.2em; flex: 2; }
+
+.footer                                 { position: fixed; bottom: 0.5em; right: 0.5em; color: #fff8; font-size: small; }

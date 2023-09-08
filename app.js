@@ -21,18 +21,27 @@ let height;
 let depth;
 
 let plate_width, plate_height, plate_depth;
-let heater_width, heater_height, heater_power;
+let heater_width, heater_height, heater_power, heater_conductivity;
+let magnetic_mat_conductivity;
 
 let plate_width_label, plate_height_label, plate_depth_label;
-let heater_width_label, heater_height_label, heater_power_label, heater_power_total_label;
+let heater_width_label, heater_height_label, heater_power_label, heater_conductivity_label;
+let magnetic_mat_conductivity_label;
+
+let ambient_temperature, ambient_temperature_label;
+
+let startButton;
 
 function init() {
     window.addEventListener('resize', () => resizeCanvas(window.innerWidth, window.innerHeight), false );
 
-    document.getElementById('startSimulationButton').addEventListener('click', () => isPaused = false);
-    document.getElementById('pauseSimulationButton').addEventListener('click', () => isPaused = true);
+    startButton = document.getElementById('startSimulationButton');
+
+    startButton.addEventListener('click', () => {isPaused = !isPaused; startButton.innerHTML = isPaused ? "Play" : "Pause"});
     document.getElementById('stepSimulationButton').addEventListener('click', () => stepOnce = true);
     document.getElementById('resetSimulationButton').addEventListener('click', resetSimulation);
+
+    [ambient_temperature, ambient_temperature_label] = inflateParamter('ambient_temperature', 0, 80, 1, 22);
 
     [plate_width, plate_width_label] = inflateParamter('plate_width', 100, 400, 5, 250);
     [plate_height, plate_height_label] = inflateParamter('plate_height', 100, 400, 5, 250);
@@ -40,9 +49,10 @@ function init() {
 
     [heater_width, heater_width_label]= inflateParamter('heater_width', 100, 400, 5, 200);
     [heater_height, heater_height_label]= inflateParamter('heater_height', 100, 400, 5, 200);
+    [heater_conductivity, heater_conductivity_label]= inflateParamter('heater_conductivity', 0.5, 1.5, 0.5, 1);
     [heater_power, heater_power_label]= inflateParamter('heater_power', 0.1, 2, 0.05, 0.4);
 
-    heater_power_total_label = document.getElementById('heater_power_total_label');
+    [magnetic_mat_conductivity, magnetic_mat_conductivity_label]= inflateParamter('magnetic_mat_conductivity', 0.5, 1.5, 0.5, 1);
 
     let rootElement = document.getElementById('simulation');
     initializeScene(rootElement);
@@ -76,13 +86,18 @@ function resetSimulation() {
     isPaused = true;
     timer = 0;
 
+    let ambientTemparature = Number(ambient_temperature.value);
+
     let plateWidth = Number(plate_width.value);
     let plateHeight = Number(plate_height.value);
     let plateDepth =  Number(plate_depth.value);
 
     let heaterWidth = Number(heater_width.value);
     let heaterHeight = Number(heater_height.value);
+    let heaterConductivity = Number(heater_conductivity.value);
     let heaterPower = Number(heater_power.value);
+
+    let magneticMatConductivity = Number(magnetic_mat_conductivity.value);
 
     if (heaterWidth > plateWidth) {
         heaterWidth = plateWidth;
@@ -103,18 +118,22 @@ function resetSimulation() {
 
     let heaterPowerTotal = heaterPower * heaterWidth / 10 * heaterHeight / 10;
 
-    initializeSimulation(width, height, depth, cubeSizeX, cubeSizeY, cubeSizeZ, hW, hH, heaterPowerTotal);
+    initializeSimulation(width, height, depth, cubeSizeX, cubeSizeY, cubeSizeZ, hW, hH, heaterPowerTotal, ambientTemparature);
     initializeVisualization(width, height, depth, cubeSizeX, cubeSizeY, cubeSizeZ);
     updateLabels(0);
 
-    plate_width_label.innerText = "Width: (" + plateWidth + " mm)";
-    plate_height_label.innerText = "Depth: (" + plateHeight + " mm)";
-    plate_depth_label.innerText = "Height: (" + plateDepth + " mm)";
+    ambient_temperature_label.innerText = "Ambient temp: " + ambientTemparature + " °C";
 
-    heater_width_label.innerText = "Width: (" + heaterWidth + " mm)";
-    heater_height_label.innerText = "Depth: (" + heaterHeight + " mm)";
-    heater_power_label.innerText = "Power: (" + heaterPower + " W/cm³ of heater)";
-    heater_power_total_label.innerText = "Total: (" + heaterPowerTotal.toFixed(2) + " W)";
+    plate_width_label.innerText = "Width: " + plateWidth + " mm";
+    plate_height_label.innerText = "Depth: " + plateHeight + " mm)";
+    plate_depth_label.innerText = "Thickness: " + plateDepth + " mm";
+
+    heater_width_label.innerText = "Width: " + heaterWidth + " mm";
+    heater_height_label.innerText = "Depth: " + heaterHeight + " mm";
+    heater_conductivity_label.innerText = "Heat conductivity: " + heaterConductivity.toFixed(1) + " W/cm³";
+    heater_power_label.innerText = "Power: " + heaterPower.toFixed(2) + " W/cm³, " + heaterPowerTotal.toFixed(0) + " W";
+
+    magnetic_mat_conductivity_label.innerText = "Heat conductivity: " + magneticMatConductivity + " W/cm³";
 }
 
 function animate() {
@@ -132,14 +151,14 @@ function animate() {
 
 function updateLabels(controlledWattage) {
     let temperatures = getTemperatures()
-    document.getElementById('timer').innerText = "Seconds: " + timer;
-    document.getElementById('temperature-center').innerText = "Center: " + temperatures[toGridIndex(Math.floor(width / 2), Math.floor(height / 2), depth - 1)].toFixed(2);
-    document.getElementById('temperature-edge').innerText = "Edge: " + temperatures[toGridIndex(Math.floor(width / 2), 0, depth - 1)].toFixed(2);
-    document.getElementById('temperature-corner').innerText = "Corner: " + temperatures[toGridIndex(0, 0, depth - 1)].toFixed(2);
-    document.getElementById('temperature-core').innerText = "Core: " + temperatures[toGridIndex(Math.floor(width / 2), Math.floor(height / 2), Math.floor(depth / 2))].toFixed(2);
-    document.getElementById('temperature-thermistor').innerText = "Build plate (back edge): " + temperatures[toGridIndex(Math.floor(width / 2), height - 1, depth - 2)].toFixed(2);
-    document.getElementById('temperature-heater').innerText = "Heater: " + temperatures[toGridIndex(Math.floor(width / 2), Math.floor(height / 2), 0)].toFixed(2);
-    document.getElementById('heater-controlled-wattage').innerText = "Heater: " + controlledWattage.toFixed(0);
+    document.getElementById('timer').innerText = "Seconds: " + Math.floor(timer/60) + " min " + Math.floor(timer%60) + " s";
+    document.getElementById('temperature-center').innerText = "Center: " + temperatures[toGridIndex(Math.floor(width / 2), Math.floor(height / 2), depth - 1)].toFixed(1) + " °C";
+    document.getElementById('temperature-edge').innerText = "Edge: " + temperatures[toGridIndex(Math.floor(width / 2), 0, depth - 1)].toFixed(1) + " °C";
+    document.getElementById('temperature-corner').innerText = "Corner: " + temperatures[toGridIndex(0, 0, depth - 1)].toFixed(2) + " °C";
+    document.getElementById('temperature-core').innerText = "Core: " + temperatures[toGridIndex(Math.floor(width / 2), Math.floor(height / 2), Math.floor(depth / 2))].toFixed(2) + " °C";
+    document.getElementById('temperature-thermistor').innerText = "Build plate (back edge): " + temperatures[toGridIndex(Math.floor(width / 2), height - 1, depth - 2)].toFixed(2) + " °C";
+    document.getElementById('temperature-heater').innerText = "Heater: " + temperatures[toGridIndex(Math.floor(width / 2), Math.floor(height / 2), 0)].toFixed(2) + " °C";
+    document.getElementById('heater-controlled-wattage').innerText = "Heater: " + controlledWattage.toFixed(0) + " W";
 }
 
 function toGridIndex(x, y, z) {

@@ -11,43 +11,42 @@
                 "three": "/external/three/three.module.js",
                 "OrbitControls": "/external/three/OrbitControls.js",
                 "GLTFLoader": "/external/three/GLTFLoader.js",
-                "RGBELoader": "/external/three/RGBELoader.js",
                 "Visualization": "/modules/visualization.js",
                 "Simulation": "/modules/simulation.js"
             }
         }
     </script>
     <script src="/external/gpu/gpu-browser.js"></script>
+    <script type="module" src="app.js" defer></script>
 </head>
 
-<body style="margin: 0; padding:0; font-family: sans-serif;">
-    <div style="position: relative;">
-        <div id="simulation" style="position: absolute"></div>
-        <div id="ui" class="layout">
-            <div>
-                <div style="display: flex; flex-direction: row;">
-                    <button id="startSimulationButton">Play</button>
-                    <button id="pauseSimulationButton">Pause</button>
-                    <button id="stepSimulationButton">Step</button>
-                    <button id="resetSimulationButton">Reset</button>
-                </div>
-                <div class="parameter-column">
-                    <h3 class="parameter-row-header">Simulation time (s)</h3>
-                    <div id="timer">Seconds:</div>
-                    <h3 class="parameter-row-header">Build surface (°C)</h3>
-                    <div id="temperature-center"></div>
-                    <div id="temperature-edge"></div>
-                    <div id="temperature-corner"></div>
-                    <h3 class="parameter-row-header">Build plate (°C)</h3>
-                    <div id="temperature-core"></div>
-                    <h3 class="parameter-row-header">Thermistors (°C)</h3>
-                    <div id="temperature-thermistor"></div>
-                    <div id="temperature-heater"></div>
-                    <h3 class="parameter-row-header">Heater power (W)</h3>
-                    <div><span id="heater-controlled-wattage"></span></div>
-                </div>
+<body>
+    <div id="simulation" class="simulation"></div>
+    <div id="ui" class="layout">
+        <div class="simulation-button-row">
+            <button class="simulation-button" id="startSimulationButton">Play</button>
+            <button class="simulation-button" id="stepSimulationButton">Step</button>
+            <button class="simulation-button" id="resetSimulationButton">Reset</button>
+        </div>
+        <div class="parameter-section">
+            <div class="parameter-column">
+                <h3 class="parameter-row-header">Simulation time</h3>
+                <div id="timer"></div>
+                <h3 class="parameter-row-header">Build surface</h3>
+                <div id="temperature-center"></div>
+                <div id="temperature-edge"></div>
+                <div id="temperature-corner"></div>
+                <h3 class="parameter-row-header">Build plate</h3>
+                <div id="temperature-core"></div>
+                <h3 class="parameter-row-header">Thermistors</h3>
+                <div id="temperature-thermistor"></div>
+                <div id="temperature-heater"></div>
+                <h3 class="parameter-row-header">Heater power</h3>
+                <div><span id="heater-controlled-wattage"></span></div>
             </div>
             <div class="parameter-column">
+                <h3 class="parameter-row-header">Environment</h3>
+                <x-parameter id="ambient_temperature_parameter"></x-parameter>
                 <h3 class="parameter-row-header">Build plate</h3>
                 <x-parameter id="plate_width_parameter"></x-parameter>
                 <x-parameter id="plate_height_parameter"></x-parameter>
@@ -55,20 +54,19 @@
                 <h3 class="parameter-row-header">Heater</h3>
                 <x-parameter id="heater_width_parameter"></x-parameter>
                 <x-parameter id="heater_height_parameter"></x-parameter>
+                <x-parameter id="heater_conductivity_parameter"></x-parameter>
                 <x-parameter id="heater_power_parameter"></x-parameter>
-                <div><span id="heater_power_total_label"></span></div>
-                <div><span>Heater thickness (2 mm)</div>
+                <div class="missing-parameter">Thickness: 2 mm (fixed)</div>
 
-                <h3 class="parameter-row-header">Magnetic build surface</h3>
-                <div>Magnetic sticker thickness (2mm)</div>
-                <div>No PEI spring steel sheet yet</div>
+                <h3 class="parameter-row-header">Magnetic sticker</h3>
+                <x-parameter id="magnetic_mat_conductivity_parameter"></x-parameter>
+                <div class="missing-parameter">Thickness: 2 mm (fixed)</div>
+                <h3 class="parameter-row-header">PEI spring steel sheet</h3>
+                <div class="missing-parameter">(Not included in simulation)</div>
                 </br>
             </div>
         </div>
-        <div style="position: fixed; width: 100%; bottom: 0.5em; display: flex; flex-direction: column; align-items: center; color: #fff8;"><h3 style="padding: 0; margin: 0;">Please note! This simulation is just a toy. Accuracy is not guaranteed.</h3><div class="version-number">Version 0.1.3</div></div>
     </div>
-
-    <script type="module" src="app.js"></script>
-</body>
-
+    <div class="footer">Please note, this simulation is just a toy. Accuracy is not guaranteed. (Version 0.1.4)</div>
+</div>
 </html>
