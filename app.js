@@ -26,7 +26,6 @@ let heater_width, heater_height, heater_power;
 let plate_width_label, plate_height_label, plate_depth_label;
 let heater_width_label, heater_height_label, heater_power_label, heater_power_total_label;
 
-
 function init() {
     window.addEventListener('resize', () => resizeCanvas(window.innerWidth, window.innerHeight), false );
 
@@ -49,7 +48,7 @@ function init() {
     initializeScene(rootElement);
 
     resetSimulation();
-    updateLabels();
+    updateLabels(0);
 }
 
 function inflateParamter(parameter_name, min, max, step, value) {
@@ -106,7 +105,7 @@ function resetSimulation() {
 
     initializeSimulation(width, height, depth, cubeSizeX, cubeSizeY, cubeSizeZ, hW, hH, heaterPowerTotal);
     initializeVisualization(width, height, depth, cubeSizeX, cubeSizeY, cubeSizeZ);
-    updateLabels();
+    updateLabels(0);
 
     plate_width_label.innerText = "Width: (" + plateWidth + " mm)";
     plate_height_label.innerText = "Depth: (" + plateHeight + " mm)";
@@ -119,21 +118,19 @@ function resetSimulation() {
 }
 
 function animate() {
-    for (let i = 0; i < 1; i++) {
-        if (!isPaused || stepOnce) {
-            timer++;
-            updateSimulation();
-            updateLabels();
+    if (!isPaused || stepOnce) {
+        stepOnce = false;
+        timer++;
 
-            stepOnce = false;
-        }
+        let controlledWattage = updateSimulation();
+        updateLabels(controlledWattage);
     }
 
     updateVisualization(getTemperatures());
     requestAnimationFrame(animate);
 }
 
-function updateLabels() {
+function updateLabels(controlledWattage) {
     let temperatures = getTemperatures()
     document.getElementById('timer').innerText = "Seconds: " + timer;
     document.getElementById('temperature-center').innerText = "Center: " + temperatures[toGridIndex(Math.floor(width / 2), Math.floor(height / 2), depth - 1)].toFixed(2);
@@ -142,6 +139,7 @@ function updateLabels() {
     document.getElementById('temperature-core').innerText = "Core: " + temperatures[toGridIndex(Math.floor(width / 2), Math.floor(height / 2), Math.floor(depth / 2))].toFixed(2);
     document.getElementById('temperature-thermistor').innerText = "Build plate (back edge): " + temperatures[toGridIndex(Math.floor(width / 2), height - 1, depth - 2)].toFixed(2);
     document.getElementById('temperature-heater').innerText = "Heater: " + temperatures[toGridIndex(Math.floor(width / 2), Math.floor(height / 2), 0)].toFixed(2);
+    document.getElementById('heater-controlled-wattage').innerText = "Heater: " + controlledWattage.toFixed(0);
 }
 
 function toGridIndex(x, y, z) {

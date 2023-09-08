@@ -1,6 +1,7 @@
 const stepSize = 1; // Simulation step size in seconds
 const iterationsPerTimestep = 100;
-const ambientTemperature = 22;
+
+let ambientTemperature = 22;
 
 let temperatures;
 let heatInput;
@@ -12,6 +13,22 @@ let width, height, depth;
 let heaterWidth, heaterHeight, heaterPower;
 
 let simulationKernel, gpu;
+
+// Silicone heater
+let siliconeHeaterDensity = 1100000; // g/m^3
+let siliconeHeaterCapacity = 1.3; // J/gK
+let siliconeHeaterConductivity = 1.0; // W/mK
+
+// Material properties
+let aluminiumDensity = 2710000; // g/m^3
+let aluminiumHeatCapacity = 0.900; // J/gK
+let aluminiumHeatConductivity = 273.0 // W/mK
+
+// Magnetic mat (and silicone heater at this point)
+let magneticMatDensity = 3500000; // g/m^3
+let magneticMatHeatCapacity = 0.5; // J/gK
+let magneticMatHeatConductivity = 1.0; // W/mK
+
 
 export function getTemperatures() {
     return temperatures;
@@ -41,30 +58,19 @@ export function initializeSimulation(w, h, d, cX, cY, cZ, hW, hH, hP) {
 
     initializeGpu();
 
-    // Material properties
-    const aluminiumDensity = 2710000; // g/m^3
-    const aluminiumHeatCapacity = 0.900; // J/gK
-    const aluminiumHeatConductivity = 273.0 // W/mK
-
-    // Magnetic mat (and silicone heater at this point)
-    const magneticMatDensity = 1100000; // g/m^3
-    const magneticMatHeatCapacity = 1.0; // J/gK
-    const magneticMatHeatConductivity = 1.0; // W/mK
-
     for (let x = 0; x < width; x++) {
         for (let y = 0; y < height; y++) {
             for (let z = 0; z < depth; z++) {
                 const temperature = ambientTemperature;
-
-                if (z >= 1 && z < depth - 1) {
-                    const heatCapacity = aluminiumHeatCapacity * aluminiumDensity * cubeSizeX * cubeSizeY * cubeSizeZ;
-                    const heatConductivity = aluminiumHeatConductivity;
+                if (z == 0) {
+                    const heatCapacity = siliconeHeaterCapacity * siliconeHeaterDensity * cubeSizeX * cubeSizeY * cubeSizeZ;
+                    const heatConductivity = siliconeHeaterConductivity;
 
                     let i = toGridIndex(x, y, z)
                     temperatures[i] = temperature;
                     conductivities[i] = heatConductivity; // W/mK
                     heatCapacities[i] = heatCapacity; // J/(cube*K)
-                } else {
+                } else if (z == depth - 1 ) {
                     const heatCapacity = magneticMatHeatCapacity * magneticMatDensity * cubeSizeX * cubeSizeY * cubeSizeZ;
                     const heatConductivity = magneticMatHeatConductivity;
 
@@ -72,7 +78,15 @@ export function initializeSimulation(w, h, d, cX, cY, cZ, hW, hH, hP) {
                     temperatures[i] = temperature;
                     conductivities[i] = heatConductivity; // W/mK
                     heatCapacities[i] = heatCapacity; // J/(cube*K)
-                }
+                } else {
+                    const heatCapacity = aluminiumHeatCapacity * aluminiumDensity * cubeSizeX * cubeSizeY * cubeSizeZ;
+                    const heatConductivity = aluminiumHeatConductivity;
+
+                    let i = toGridIndex(x, y, z)
+                    temperatures[i] = temperature;
+                    conductivities[i] = heatConductivity; // W/mK
+                    heatCapacities[i] = heatCapacity; // J/(cube*K)
+                } 
             }
         }
     }
@@ -113,6 +127,8 @@ export function updateSimulation() {
 
     temperatures.set(temperaturesTexture.toArray());
     temperaturesTexture.delete();
+
+    return controlledWattage;
 }
 
 function toGridIndex(x, y, z) {
@@ -121,6 +137,9 @@ function toGridIndex(x, y, z) {
 
 // Create GPU kernel for calculating heat exchange
 function initializeGpu() {
+
+    // There is an unresolved issue with the gpu.js library where behaves differently depending on browser.
+    // So if the first way does not work, then try the other.
     if (gpu == undefined) {
         try {
             gpu = new GPU();
