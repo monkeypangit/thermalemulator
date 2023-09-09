@@ -17,7 +17,7 @@ let simulationKernel, gpu;
 // Silicone heater
 let siliconeHeaterDensity = 1100000; // g/m^3
 let siliconeHeaterCapacity = 1.3; // J/gK
-let siliconeHeaterConductivity = 1.0; // W/mK
+let siliconeHeaterConductivity; // W/mK (from UI)
 
 // Material properties
 let aluminiumDensity = 2710000; // g/m^3
@@ -27,14 +27,18 @@ let aluminiumHeatConductivity = 273.0 // W/mK
 // Magnetic mat (and silicone heater at this point)
 let magneticMatDensity = 3500000; // g/m^3
 let magneticMatHeatCapacity = 0.5; // J/gK
-let magneticMatHeatConductivity = 1.0; // W/mK
+let magneticMatHeatConductivity; // W/mK (from UI)
+
+let bedConvectionTop;
+let bedConvectionBottom;
+let bedConvectionMid;
 
 
 export function getTemperatures() {
     return temperatures;
 }
 
-export function initializeSimulation(w, h, d, cX, cY, cZ, hW, hH, hP, Ta) {
+export function initializeSimulation(w, h, d, cX, cY, cZ, hW, hH, hP, Ta, mMC, sHC, bCT, bCB) {
 
     ambientTemperature = Ta;
 
@@ -48,6 +52,13 @@ export function initializeSimulation(w, h, d, cX, cY, cZ, hW, hH, hP, Ta) {
     heaterWidth = hW;
     heaterHeight = hH;
     heaterPower = hP;
+
+    magneticMatHeatConductivity = mMC;
+    siliconeHeaterConductivity = sHC;
+
+    bedConvectionTop = bCT;
+    bedConvectionBottom = bCB;
+    bedConvectionMid = (bedConvectionTop + bedConvectionBottom) / 2;
 
     temperatures = new Float32Array(width * height * depth);
     heatInput = new Float32Array(width * height * depth);
@@ -120,10 +131,10 @@ export function updateSimulation() {
         }
     }
 
-    let temperaturesTexture = simulationKernel(temperatures, conductivities, heatCapacities, heatInput, dt, width, height, depth, cubeSizeX, cubeSizeY, cubeSizeZ, ambientTemperature);
+    let temperaturesTexture = simulationKernel(temperatures, conductivities, heatCapacities, heatInput, dt, width, height, depth, cubeSizeX, cubeSizeY, cubeSizeZ, ambientTemperature, bedConvectionTop, bedConvectionBottom, bedConvectionMid);
 
     for (let iter = 0; iter < iterationsPerTimestep - 1; iter++) {
-        let temp = simulationKernel(temperaturesTexture, conductivities, heatCapacities, heatInput, dt, width, height, depth, cubeSizeX, cubeSizeY, cubeSizeZ, ambientTemperature);
+        let temp = simulationKernel(temperaturesTexture, conductivities, heatCapacities, heatInput, dt, width, height, depth, cubeSizeX, cubeSizeY, cubeSizeZ, ambientTemperature, bedConvectionTop, bedConvectionBottom, bedConvectionMid);
         temperaturesTexture.delete();
         temperaturesTexture = temp;
     }
@@ -151,7 +162,11 @@ function initializeGpu() {
         }
     }
     
-    simulationKernel = gpu.createKernel(function (temps, conds, heatCapacities, heatInput, dt, width, height, depth, cubeSizeX, cubeSizeY, cubeSizeZ, ambientTemparature) {
+    simulationKernel = gpu.createKernel(function (temps, conds, heatCapacities, heatInput, dt, width, height, depth, cubeSizeX, cubeSizeY, cubeSizeZ, ambientTemparature, heatConvectionTop, heatConvectionBottom, heatConvectionMid) {
+        const surfConvTop = heatConvectionTop;
+        const surfConvMid = heatConvectionMid;
+        const surfConvBottom = heatConvectionBottom;
+        
         const surfConv = 8; // Coefficient of surface convection
         const kSb = 0.0000000567; // Stefan-Boltzmann constant
         const e = 0.9; // Surface Emissivity Coefficient
@@ -187,7 +202,7 @@ function initializeGpu() {
         } else {
             const A = cubeSizeY * cubeSizeZ; // Surface area
             // Heat convection on surface
-            dQ -= surfConv * A * dt * dTa;
+            dQ -= surfConvMid * A * dt * dTa;
             // Heat radiation
             dQ -= e * kSb * A * (Math.pow(temps[i] + 273, 4) - Ta4) * dt;
         }
@@ -199,7 +214,7 @@ function initializeGpu() {
             dQ -= k_h * cubeSizeX * cubeSizeZ * dT * dt / cubeSizeY;
         } else {
             const A = cubeSizeX * cubeSizeZ;
-            dQ -= surfConv * A * dt * dTa;
+            dQ -= surfConvMid * A * dt * dTa;
             dQ -= e * kSb * A * (Math.pow(temps[i] + 273, 4) - Ta4) * dt;
         }
 
@@ -210,7 +225,7 @@ function initializeGpu() {
             dQ -= k_h * cubeSizeX * cubeSizeY * dT * dt / cubeSizeZ;
         } else {
             const A = cubeSizeX * cubeSizeY;
-            dQ -= surfConv * A * dt * dTa;
+            dQ -= surfConvBottom * A * dt * dTa;
             dQ -= e * kSb * A * (Math.pow(temps[i] + 273, 4) - Ta4) * dt;
         }
 
@@ -221,7 +236,7 @@ function initializeGpu() {
             dQ -= k_h * cubeSizeY * cubeSizeZ * dT * dt / cubeSizeX;
         } else {
             const A = cubeSizeY * cubeSizeZ;
-            dQ -= surfConv * A * dt * dTa;
+            dQ -= surfConvMid * A * dt * dTa;
             dQ -= e * kSb * A * (Math.pow(temps[i] + 273, 4) - Ta4) * dt;
         }
 
@@ -232,7 +247,7 @@ function initializeGpu() {
             dQ -= k_h * cubeSizeX * cubeSizeZ * dT * dt / cubeSizeY;
         } else {
             const A = cubeSizeX * cubeSizeZ;
-            dQ -= surfConv * A * dt * dTa;
+            dQ -= surfConvMid * A * dt * dTa;
             dQ -= e * kSb * A * (Math.pow(temps[i] + 273, 4) - Ta4) * dt;
         }
 
@@ -243,7 +258,7 @@ function initializeGpu() {
             dQ -= k_h * cubeSizeX * cubeSizeY * dT * dt / cubeSizeZ;
         } else {
             const A = cubeSizeX * cubeSizeY;
-            dQ -= surfConv * A * dt * dTa;
+            dQ -= surfConvTop * A * dt * dTa;
             dQ -= e * kSb * A * (Math.pow(temps[i] + 273, 4) - Ta4) * dt;
         }
 

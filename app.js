@@ -30,6 +30,10 @@ let magnetic_mat_conductivity_label;
 
 let ambient_temperature, ambient_temperature_label;
 
+let bed_convection_top, bed_convection_top_label;
+let bed_convection_bottom, bed_convection_bottom_label;
+
+
 let startButton;
 
 function init() {
@@ -53,6 +57,9 @@ function init() {
     [heater_power, heater_power_label]= inflateParamter('heater_power', 0.1, 2, 0.05, 0.4);
 
     [magnetic_mat_conductivity, magnetic_mat_conductivity_label]= inflateParamter('magnetic_mat_conductivity', 0.5, 1.5, 0.5, 1);
+
+    [bed_convection_top, bed_convection_top_label] = inflateParamter('bed_convection_top', 5, 50, 1, 8);
+    [bed_convection_bottom, bed_convection_bottom_label] = inflateParamter('bed_convection_bottom', 5, 50, 1, 8);
 
     let rootElement = document.getElementById('simulation');
     initializeScene(rootElement);
@@ -83,6 +90,7 @@ function inflateParamter(parameter_name, min, max, step, value) {
 }
 
 function resetSimulation() {
+    startButton.innerHTML = "Play";
     isPaused = true;
     timer = 0;
 
@@ -98,6 +106,9 @@ function resetSimulation() {
     let heaterPower = Number(heater_power.value);
 
     let magneticMatConductivity = Number(magnetic_mat_conductivity.value);
+
+    let bedConvectionTop = Number(bed_convection_top.value);
+    let bedConvectionBottom = Number(bed_convection_bottom.value);
 
     if (heaterWidth > plateWidth) {
         heaterWidth = plateWidth;
@@ -118,7 +129,7 @@ function resetSimulation() {
 
     let heaterPowerTotal = heaterPower * heaterWidth / 10 * heaterHeight / 10;
 
-    initializeSimulation(width, height, depth, cubeSizeX, cubeSizeY, cubeSizeZ, hW, hH, heaterPowerTotal, ambientTemparature);
+    initializeSimulation(width, height, depth, cubeSizeX, cubeSizeY, cubeSizeZ, hW, hH, heaterPowerTotal, ambientTemparature, magneticMatConductivity, heaterConductivity, bedConvectionTop, bedConvectionBottom);
     initializeVisualization(width, height, depth, cubeSizeX, cubeSizeY, cubeSizeZ);
     updateLabels(0);
 
@@ -130,10 +141,13 @@ function resetSimulation() {
 
     heater_width_label.innerText = "Width: " + heaterWidth + " mm";
     heater_height_label.innerText = "Depth: " + heaterHeight + " mm";
-    heater_conductivity_label.innerText = "Heat conductivity: " + heaterConductivity.toFixed(1) + " W/cm³";
+    heater_conductivity_label.innerText = "Heat conductivity: " + heaterConductivity.toFixed(1) + " W/mK";
     heater_power_label.innerText = "Power: " + heaterPower.toFixed(2) + " W/cm³, " + heaterPowerTotal.toFixed(0) + " W";
 
-    magnetic_mat_conductivity_label.innerText = "Heat conductivity: " + magneticMatConductivity + " W/cm³";
+    magnetic_mat_conductivity_label.innerText = "Heat conductivity: " + magneticMatConductivity + " W/mK";
+
+    bed_convection_top_label.innerText = "Top: " + bedConvectionTop + " W/m²K";
+    bed_convection_bottom_label.innerText = "Bottom: " + bedConvectionBottom + " W/m²K";
 }
 
 function animate() {
