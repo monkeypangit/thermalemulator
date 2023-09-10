@@ -184,7 +184,7 @@ function updateLabels(v) {
         seconds = "0" + seconds;
     }
 
-    document.getElementById('timer').innerText = "Simulation time: " + minutes + " min " + seconds + " s";
+    document.getElementById('timer').innerText = "" + minutes + " min " + seconds + " s";
     
     let pW = v.plate_width;
     let pH = v.plate_height;

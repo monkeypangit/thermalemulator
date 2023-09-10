@@ -25,6 +25,11 @@
     <div id="ui" class="layout">
         <div class="title-wrapper">
             <h2 class="title">Heat bed thermal simulator</h2>
+            <div class="simulation-button-row">
+                <button class="simulation-button" id="startSimulationButton">Play</button>
+                <button class="simulation-button" id="stepSimulationButton">Step</button>
+                <button class="simulation-button" id="resetSimulationButton">Reset</button>
+            </div>
         </div>
         <div class="controls">
             <div class="parameter-column">
@@ -71,15 +76,9 @@
                 <div class="missing-parameter">Too thin to be part of simulation. It has limited effect anyway. (Low thermal mass and decent conductivity)</div>
             </div>
         </div>
-        <div class="control-column">
-            <div><h3 class="timer" id="timer"></h3></div>
-            <div class="simulation-button-row">
-                <button class="simulation-button" id="startSimulationButton">Play</button>
-                <button class="simulation-button" id="stepSimulationButton">Step</button>
-                <button class="simulation-button" id="resetSimulationButton">Reset</button>
-            </div>
-            <div class="fine-print">(Version 0.1.6) Please do your own verification, accuracy of simulation is not guaranteed.</div>
-        </div>
     </div>
+    
+    <div><h1 class="timer" id="timer"></h1></div>
+    <div class="fine-print"><span>(Version 0.1.7) Please do your own verification, accuracy of simulation is not guaranteed.</span></div>
 </div>
 </html>
