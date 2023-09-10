@@ -164,7 +164,7 @@ function createPeiSheet(p) {
     }
 
     peiSheet = createPeiSheetRoundedRectangle(p.plate_width / 1000 - 0.008, p.plate_height / 1000 - 0.008, 0.0004, 0.0025, 0, peiSheetMaterial);
-    peiSheet.position.y = -0.0469; // p.plate_depth / 1000 + 0.002 + 0.0002; 
+    peiSheet.position.y = -0.0569; // p.plate_depth / 1000 + 0.002 + 0.0002; 
     peiSheet.position.x = 0.04 + 0.04 - (p.plate_width / 10000);
     peiSheet.position.z = -0.01 + 0.04 - (p.plate_height / 10000);
 
@@ -340,7 +340,7 @@ function createGradientSkysphere() {
 
 function loadSceneGeometry() {
     const loader = new GLTFLoader();
-    let yPosition = -0.05
+    let yPosition = -0.06
 
     // Load a glTF resource
     loader.load(
@@ -376,7 +376,7 @@ export function _updateVisualization(opacity) {
     let frequency = 0.00025;  // Speed of oscillation
 
     // Store initial target position
-    let initialTarget = new THREE.Vector3(0, 0, 0);  // Assume the initial target is at the origin
+    let initialTarget = new THREE.Vector3(0, -0.01, 0);  // Assume the initial target is at the origin
 
     // Get the elapsed time in milliseconds
     let currentTime = Date.now();
