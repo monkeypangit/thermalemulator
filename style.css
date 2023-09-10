@@ -1,18 +1,32 @@
-body                                    { pointer-events: none; position: relative; margin: 0; padding:0; font-family: sans-serif; }
-.layout                                 { width: 100%; position: absolute; font-size: medium; display: flex; flex-direction: column; justify-content: space-between; align-items: center; }
+body                                    { min-height: 800px; overflow: scroll; box-sizing: border-box; pointer-events: none; position: relative; margin: 0; padding:0; font-family: sans-serif; color: #fff; }
+.simulation                             { position: fixed; pointer-events: all; z-index: -1; }
 
-.simulation                             { position: absolute; pointer-events: all; }
+.layout                                 { width: 100%; height: 100vh; font-size: medium; display: flex; flex-direction: column; justify-content: space-between; align-items: center; }
+
+.controls                               { width: 100%; display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; }
+
+.title-wrapper                          { display: flex; flex-direction: column; align-items: center; }
+.title                                  { margin: 1em 0 0 0; }
 
 .simulation-button-row                  { display: flex; flex-direction: row; }
-.simulation-button                      { pointer-events: all; font-size: medium; width: 5em; height: 2em; border: 0; padding: 0; margin: 1em; border-radius: 1em; }
+.simulation-button                      { pointer-events: all; font-size: medium; width: 5em; height: 2em; border: 0; padding: 0; margin: 0.8em 1em 0.5em 1em; border-radius: 1em; }
 
-.parameter-section                      { width: 100%; display: flex; flex-direction: row; justify-content: space-between; }
-.parameter-column                       { display: flex; flex-direction: column; color: #fff; margin: 20px; font-size: small; }
-h3.parameter-row-header                 { margin: 1.2em 0 0 0; padding: 0; }
-x-parameter                             { margin: 0.5em 0 0 0; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-start; }
-.missing-parameter                      { margin: 0.5em 0; }
+.timer                                  { margin: 0; padding: 0; }
+.timer-monospace                        { white-space: pre; font-family: monospace;}
+
+.radio-parameter                        { pointer-events: all; display: flex; flex-direction: row; }
+.radio-parameter input[type="radio"]    { margin: 0 0.5em 0 0; padding: 0; }
+
+.control-column                         { height: 100vh; display: flex; flex-direction: column; margin: 0; font-size: small; justify-content: flex-end; align-items: center; }
+
+.parameter-column                       { display: flex; width: 20em; flex-direction: column; margin: 1em 1.5em 0 1.5em; font-size: small; }
+
+h3.parameter-row-header                 { margin: 1.2em 0 0.5em 0; padding: 0; }
+x-parameter                             { margin: 0 0 0.5em 0; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-start; }
+.missing-parameter                      { margin: 0 0 0.5em 0; }
+.vertical-space                         { height: 0.5em; }
 .range-widget                           { width: 100%; pointer-events: all; display: flex; flex-direction: row; align-items: center; justify-content: flex-start; margin: 0.1em 0 0 0; }
 .parameter-button                       { pointer-events: all; border: 0; padding: 0; margin: 0; width: 1.5em; height: 1.5em; border-radius: 1.25em; }
 .parameter-range                        { padding: 0; margin: 0 0.2em; flex: 2; }
 
-.footer                                 { position: fixed; bottom: 0.5em; right: 0.5em; color: #fff8; font-size: small; }
+.fine-print                             { margin: 0.5em; color: #fffa; font-size: small; }

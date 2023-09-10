@@ -1,16 +1,20 @@
 const stepSize = 1; // Simulation step size in seconds
 const iterationsPerTimestep = 100;
 
-let ambientTemperature;
+// Size of sides of cubes in meters
+const cubeSizeX = 0.005;
+const cubeSizeY = 0.005;
+const cubeSizeZ = 0.002;
 
+// Grid arrays holding simulation data
 let temperatures;
 let heatInput;
 let conductivities;
 let heatCapacities;
 
-let cubeSizeX, cubeSizeY, cubeSizeZ;
+// Dimensions in grid cubes for things
 let width, height, depth;
-let heaterWidth, heaterHeight, heaterPower;
+let heaterWidth, heaterHeight;
 
 let simulationKernel, gpu;
 
@@ -29,41 +33,45 @@ let magneticMatDensity = 3500000; // g/m^3
 let magneticMatHeatCapacity = 0.5; // J/gK
 let magneticMatHeatConductivity; // W/mK (from UI)
 
-let bedConvectionTop;
-let bedConvectionBottom;
-let bedConvectionMid;
+// PID regulator, constants and error terms
+let Kp, Ki, Kd;
+let Ep, Ei;
 
+export function _getTemperatureGrid(p) { return temperatures[toGridIndex(p[0], p[1], p[2])]; }
 
-export function getTemperatures() {
-    return temperatures;
+export function _getTemperature(p) {
+    let x = Math.min(Math.max(Math.floor(p[0] / 1000 / cubeSizeX), 0), width - 1);
+    let y = Math.min(Math.max(Math.floor(p[1] / 1000 / cubeSizeY), 0), height - 1);
+    let z = Math.min(Math.max(Math.floor(p[2] / 1000 / cubeSizeZ), 0), depth - 1);
+
+    return temperatures[toGridIndex(x, y, z)];
 }
 
-export function initializeSimulation(w, h, d, cX, cY, cZ, hW, hH, hP, Ta, mMC, sHC, bCT, bCB) {
 
-    ambientTemperature = Ta;
 
-    width = w;
-    height = h;
-    depth = d;
-    cubeSizeX = cX;
-    cubeSizeY = cY;
-    cubeSizeZ = cZ;
+export function _getSimulationResolutionX() { return width; }
+export function _getSimulationResolutionY() { return height; }
+export function _getSimulationResolutionZ() { return depth; }
 
-    heaterWidth = hW;
-    heaterHeight = hH;
-    heaterPower = hP;
+export function _resetSimulation(p) {
 
-    magneticMatHeatConductivity = mMC;
-    siliconeHeaterConductivity = sHC;
+    width = Math.floor(p.plate_width / 1000 / cubeSizeX);
+    height = Math.floor(p.plate_height / 1000 / cubeSizeY);
+    depth = Math.floor(p.plate_depth / 1000 / cubeSizeZ) + 2;
 
-    bedConvectionTop = bCT;
-    bedConvectionBottom = bCB;
-    bedConvectionMid = (bedConvectionTop + bedConvectionBottom) / 2;
+    heaterWidth = Math.floor(p.heater_width / 1000 / cubeSizeX);
+    heaterHeight = Math.floor(p.heater_height / 1000 / cubeSizeX);
 
     temperatures = new Float32Array(width * height * depth);
     heatInput = new Float32Array(width * height * depth);
     conductivities = new Float32Array(width * height * depth);
     heatCapacities = new Float32Array(width * height * depth);
+
+    siliconeHeaterConductivity = p.magnetic_mat_conductivity;
+    magneticMatHeatConductivity = p.heater_conductivity;
+    
+    Ep = 0;
+    Ei = 0;
 
     if (simulationKernel != undefined) {
         simulationKernel.destroy();
@@ -75,7 +83,7 @@ export function initializeSimulation(w, h, d, cX, cY, cZ, hW, hH, hP, Ta, mMC, s
     for (let x = 0; x < width; x++) {
         for (let y = 0; y < height; y++) {
             for (let z = 0; z < depth; z++) {
-                const temperature = ambientTemperature;
+                const temperature = p.ambient_temperature;
                 if (z == 0) {
                     const heatCapacity = siliconeHeaterCapacity * siliconeHeaterDensity * cubeSizeX * cubeSizeY * cubeSizeZ;
                     const heatConductivity = siliconeHeaterConductivity;
@@ -106,16 +114,40 @@ export function initializeSimulation(w, h, d, cX, cY, cZ, hW, hH, hP, Ta, mMC, s
     }
 }
 
-export function updateSimulation() {
+function updatePID(controlTemperature, targetTemperature, dt) {
+    let Ep_new = (targetTemperature - controlTemperature);
+    Ei = 0.85 * Ei + Ep * dt
+    let Ed = (Ep_new - Ep) / dt;
+
+    Ep = Ep_new;
+    return Kp * Ep + Ki * Ei + Kd * Ed;
+}
+
+export function _iterateSimulation(p, thermistorLocation) {
+
+    // Calculate a coefficient that compensates for the heating delay between the heater and the thermistor
+    // The coefficient increases with vertical offset dsitance
+    let controlTemperature = _getTemperature(thermistorLocation);
+
+    let thermistorLocationCompensation = thermistorLocation[2];
+    let buildPlateSizeCompensation = (width * height * cubeSizeX * cubeSizeY) / (0.25*0.25);
+
+    Kp = 200 * (1 + thermistorLocationCompensation * 500) * buildPlateSizeCompensation;
+    Ki = 75 / (1 + thermistorLocationCompensation * 25000) * buildPlateSizeCompensation;
+    Kd = 5 * (1 + thermistorLocationCompensation * 100000) * buildPlateSizeCompensation;
+
+    let k = updatePID(controlTemperature, p.target_temperature, stepSize);
+
+    let heaterPowerTotal = p.heater_power * heaterWidth * cubeSizeX * 100 * heaterHeight * cubeSizeY * 100;
+
+    let bed_convection_mid = (p.bed_convection_top + p.bed_convection_bottom) / 2;
+    
     const dt = stepSize / iterationsPerTimestep;
 
     // Heater
-    const controlTemperature = temperatures[toGridIndex(Math.floor(width / 2), Math.floor(height / 2), 0)]
-    const targetTemp = 110;
+    const controlledWattage = Math.min(Math.max(k, 0), heaterPowerTotal);
 
-    const wattage = heaterPower;
     const heaterArea = heaterWidth * heaterHeight;
-    const controlledWattage = wattage * (1 - 0.1 * Math.max(0, (controlTemperature - targetTemp + 5)));
     const joulesPerIteration = controlledWattage * (stepSize / iterationsPerTimestep);
     const joulePerGridElement = joulesPerIteration / heaterArea;
 
@@ -131,10 +163,41 @@ export function updateSimulation() {
         }
     }
 
-    let temperaturesTexture = simulationKernel(temperatures, conductivities, heatCapacities, heatInput, dt, width, height, depth, cubeSizeX, cubeSizeY, cubeSizeZ, ambientTemperature, bedConvectionTop, bedConvectionBottom, bedConvectionMid);
+    let temperaturesTexture = simulationKernel(
+        temperatures, 
+        conductivities, 
+        heatCapacities, 
+        heatInput, 
+        dt, 
+        width, 
+        height, 
+        depth, 
+        cubeSizeX, 
+        cubeSizeY, 
+        cubeSizeZ, 
+        p.ambient_temperature, 
+        p.bed_convection_top, 
+        p.bed_convection_bottom, 
+        bed_convection_mid);
 
-    for (let iter = 0; iter < iterationsPerTimestep - 1; iter++) {
-        let temp = simulationKernel(temperaturesTexture, conductivities, heatCapacities, heatInput, dt, width, height, depth, cubeSizeX, cubeSizeY, cubeSizeZ, ambientTemperature, bedConvectionTop, bedConvectionBottom, bedConvectionMid);
+    for (let iter = 0; iter < iterationsPerTimestep; iter++) {
+        let temp = simulationKernel(
+            temperaturesTexture, 
+            conductivities, 
+            heatCapacities, 
+            heatInput, 
+            dt, 
+            width, 
+            height, 
+            depth, 
+            cubeSizeX, 
+            cubeSizeY, 
+            cubeSizeZ, 
+            p.ambient_temperature, 
+            p.bed_convection_top, 
+            p.bed_convection_bottom, 
+            bed_convection_mid);
+
         temperaturesTexture.delete();
         temperaturesTexture = temp;
     }
@@ -162,7 +225,23 @@ function initializeGpu() {
         }
     }
     
-    simulationKernel = gpu.createKernel(function (temps, conds, heatCapacities, heatInput, dt, width, height, depth, cubeSizeX, cubeSizeY, cubeSizeZ, ambientTemparature, heatConvectionTop, heatConvectionBottom, heatConvectionMid) {
+    simulationKernel = gpu.createKernel(function (
+        temps, 
+        conds, 
+        heatCapacities, 
+        heatInput, 
+        dt, 
+        width, 
+        height, 
+        depth, 
+        cubeSizeX, 
+        cubeSizeY, 
+        cubeSizeZ, 
+        ambientTemparature, 
+        heatConvectionTop, 
+        heatConvectionBottom, 
+        heatConvectionMid) {
+        
         const surfConvTop = heatConvectionTop;
         const surfConvMid = heatConvectionMid;
         const surfConvBottom = heatConvectionBottom;
@@ -177,7 +256,7 @@ function initializeGpu() {
 
         const z = Math.floor(this.thread.x / (width * height));
         const y = Math.floor((this.thread.x - (z * width * height)) / width);
-        const x = this.thread.x % width; //- (y * width) - (z * width * height);
+        const x = this.thread.x % width;
 
         function toGridIndex(x, y, z, width, height) { return z * width * height + y * width + x; }
         function heatCoefficient(a, b) { return 2 / (1 / a + 1 / b); }

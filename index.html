@@ -23,53 +23,63 @@
 <body>
     <div id="simulation" class="simulation"></div>
     <div id="ui" class="layout">
-        <div class="simulation-button-row">
-            <button class="simulation-button" id="startSimulationButton">Play</button>
-            <button class="simulation-button" id="stepSimulationButton">Step</button>
-            <button class="simulation-button" id="resetSimulationButton">Reset</button>
+        <div class="title-wrapper">
+            <h2 class="title">Heat bed thermal simulator</h2>
         </div>
-        <div class="parameter-section">
+        <div class="controls">
             <div class="parameter-column">
-                <h3 class="parameter-row-header">Simulation time</h3>
-                <div id="timer"></div>
-                <h3 class="parameter-row-header">Build surface</h3>
-                <div id="temperature-center"></div>
-                <div id="temperature-edge"></div>
-                <div id="temperature-corner"></div>
-                <h3 class="parameter-row-header">Build plate</h3>
-                <div id="temperature-core"></div>
-                <h3 class="parameter-row-header">Thermistors</h3>
-                <div id="temperature-thermistor"></div>
-                <div id="temperature-heater"></div>
-                <h3 class="parameter-row-header">Heater power</h3>
-                <div><span id="heater-controlled-wattage"></span></div>
-            </div>
-            <div class="parameter-column">
-                <h3 class="parameter-row-header">Environment</h3>
+                <h3 class="parameter-row-header">Ambien temperature</h3>
                 <x-parameter id="ambient_temperature_parameter"></x-parameter>
-                <h3 class="parameter-row-header">Build plate</h3>
-                <x-parameter id="plate_width_parameter"></x-parameter>
-                <x-parameter id="plate_height_parameter"></x-parameter>
-                </span><x-parameter id="plate_depth_parameter"></x-parameter>
-                <h3 class="parameter-row-header">Heater</h3>
-                <x-parameter id="heater_width_parameter"></x-parameter>
-                <x-parameter id="heater_height_parameter"></x-parameter>
-                <x-parameter id="heater_conductivity_parameter"></x-parameter>
-                <x-parameter id="heater_power_parameter"></x-parameter>
-                <div class="missing-parameter">Thickness: 2 mm (fixed)</div>
-
-                <h3 class="parameter-row-header">Magnetic sticker</h3>
-                <x-parameter id="magnetic_mat_conductivity_parameter"></x-parameter>
-                <div class="missing-parameter">Thickness: 2 mm (fixed)</div>
-                <h3 class="parameter-row-header">PEI spring steel sheet</h3>
-                <div class="missing-parameter">(Not included in simulation)</div>
 
                 <h3 class="parameter-row-header">Heat convection (bed fans)</h3>
                 <x-parameter id="bed_convection_top_parameter"></x-parameter>
                 <x-parameter id="bed_convection_bottom_parameter"></x-parameter>
+
+                <h3 class="parameter-row-header">Temperatures</h3>
+                <div id="temperature-center"></div>
+                <div id="temperature-edge"></div>
+                <div id="temperature-corner"></div>
+                <div id="temperature-core"></div>
+                
+                <h3 class="parameter-row-header">Control thermistor</h3>
+                <div class="radio-parameter"><input type="radio" autocomplete="off" id="control_thermistor_heater" name="control_thermistor" value="0" checked><label for="control_thermistor_heater" id="temperature-heater"></label></div>
+                <div class="radio-parameter"><input type="radio" autocomplete="off" id="control_thermistor_build_plate" name="control_thermistor" value="1"><label for="control_thermistor_build_plate" id="temperature-plate"></label></div>
+                <div class="vertical-space"></div>
+                <x-parameter id="target_temperature_parameter"></x-parameter>
+
+                <h3 class="parameter-row-header">Heater power</h3>
+                <div class="missing-parameter"><span id="heater-controlled-wattage"></span></div>
+                <x-parameter id="heater_power_parameter"></x-parameter>
+            </div>
+            <div class="parameter-column">
+                <h3 class="parameter-row-header">Build plate</h3>
+                <x-parameter id="plate_width_parameter"></x-parameter>
+                <x-parameter id="plate_height_parameter"></x-parameter>
+                <x-parameter id="plate_depth_parameter"></x-parameter>
+
+                <h3 class="parameter-row-header">Heater</h3>
+                <x-parameter id="heater_width_parameter"></x-parameter>
+                <x-parameter id="heater_height_parameter"></x-parameter>
+                <div class="missing-parameter">Thickness: 2 mm (fixed)</div>
+                <x-parameter id="heater_conductivity_parameter"></x-parameter>
+
+                <h3 class="parameter-row-header">Magnetic sticker</h3>
+                <div class="missing-parameter">Thickness: 2 mm (fixed)</div>
+                <x-parameter id="magnetic_mat_conductivity_parameter"></x-parameter>
+
+                <h3 class="parameter-row-header">PEI spring steel sheet </h3>
+                <div class="missing-parameter">Too thin to be part of simulation. It has limited effect anyway. (Low thermal mass and decent conductivity)</div>
             </div>
         </div>
+        <div class="control-column">
+            <div><h3 class="timer" id="timer"></h3></div>
+            <div class="simulation-button-row">
+                <button class="simulation-button" id="startSimulationButton">Play</button>
+                <button class="simulation-button" id="stepSimulationButton">Step</button>
+                <button class="simulation-button" id="resetSimulationButton">Reset</button>
+            </div>
+            <div class="fine-print">(Version 0.1.6) Please do your own verification, accuracy of simulation is not guaranteed.</div>
+        </div>
     </div>
-    <div class="footer">Please note, this simulation is just a toy. Accuracy is not guaranteed. (Version 0.1.5)</div>
 </div>
 </html>

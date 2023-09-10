@@ -1,74 +1,69 @@
-import { initializeScene } from '/modules/visualization.js';
-import { updateVisualization } from '/modules/visualization.js';
+import { _initializeScene } from '/modules/visualization.js';
+import { _updateVisualization } from '/modules/visualization.js';
 import { resizeCanvas } from '/modules/visualization.js';
-import { initializeVisualization } from '/modules/visualization.js';
-import { initializeSimulation } from '/modules/simulation.js';
-import { updateSimulation } from '/modules/simulation.js';
-import { getTemperatures } from '/modules/simulation.js';
+import { _resetVisualization } from '/modules/visualization.js';
+import { _resetSimulation } from '/modules/simulation.js';
+import { _iterateSimulation } from '/modules/simulation.js';
+import { _getTemperature } from '/modules/simulation.js';
 
 let timer = 0;
 let isPaused = true;
 let stepOnce = false;
 
-// Size of sides of cubes in meters
-let cubeSizeX = 0.005;
-let cubeSizeY = 0.005;
-let cubeSizeZ = 0.002;
+let params = {};
 
-// Number of cubes in each dimension
-let width;
-let height;
-let depth;
+let thermistors = { heater: 0, plate: 1 };
+let thermistorLocations;
 
-let plate_width, plate_height, plate_depth;
-let heater_width, heater_height, heater_power, heater_conductivity;
-let magnetic_mat_conductivity;
+let controlledWattage = 0;
 
-let plate_width_label, plate_height_label, plate_depth_label;
-let heater_width_label, heater_height_label, heater_power_label, heater_conductivity_label;
-let magnetic_mat_conductivity_label;
+let opacity = 0;
 
-let ambient_temperature, ambient_temperature_label;
-
-let bed_convection_top, bed_convection_top_label;
-let bed_convection_bottom, bed_convection_bottom_label;
-
-
-let startButton;
+let ambientTempHover = false;
 
 function init() {
     window.addEventListener('resize', () => resizeCanvas(window.innerWidth, window.innerHeight), false );
 
-    startButton = document.getElementById('startSimulationButton');
-
-    startButton.addEventListener('click', () => {isPaused = !isPaused; startButton.innerHTML = isPaused ? "Play" : "Pause"});
-    document.getElementById('stepSimulationButton').addEventListener('click', () => stepOnce = true);
+    document.getElementById('startSimulationButton').addEventListener('click', () => { isPaused = !isPaused; updateStartButton(); });
+    document.getElementById('stepSimulationButton').addEventListener('click', () => { isPaused = true; stepOnce = true; updateStartButton(); });
     document.getElementById('resetSimulationButton').addEventListener('click', resetSimulation);
 
-    [ambient_temperature, ambient_temperature_label] = inflateParamter('ambient_temperature', 0, 80, 1, 22);
+    inflateParamter(params, true, 'plate_width', 100, 400, 5, 250, (v) => "Width: " + v + " mm");
+    inflateParamter(params, true, 'plate_height', 100, 400, 5, 250, (v) => "Depth: " + v + " mm)");
+    inflateParamter(params, true, 'plate_depth', 4, 10, 2, 8, (v) => "Thickness: " + v + " mm)");
 
-    [plate_width, plate_width_label] = inflateParamter('plate_width', 100, 400, 5, 250);
-    [plate_height, plate_height_label] = inflateParamter('plate_height', 100, 400, 5, 250);
-    [plate_depth, plate_depth_label] = inflateParamter('plate_depth', 4, 10, 2, 8);
+    inflateParamter(params, true, 'heater_width', 80, 400, 5, 200, (v) =>"Width: " + v + " mm");
+    inflateParamter(params, true, 'heater_height', 80, 400, 5, 200, (v) => "Depth: " + v + " mm)");
 
-    [heater_width, heater_width_label]= inflateParamter('heater_width', 100, 400, 5, 200);
-    [heater_height, heater_height_label]= inflateParamter('heater_height', 100, 400, 5, 200);
-    [heater_conductivity, heater_conductivity_label]= inflateParamter('heater_conductivity', 0.5, 1.5, 0.5, 1);
-    [heater_power, heater_power_label]= inflateParamter('heater_power', 0.1, 2, 0.05, 0.4);
+    inflateParamter(params, true, 'magnetic_mat_conductivity', 0.5, 1.5, 0.5, 1, (v) => "Thermal conductivity: " + v.toFixed(1) + " W/mK");
+    inflateParamter(params, true, 'heater_conductivity', 0.5, 1.5, 0.5, 1, (v) => "Thermal conductivity: " + v.toFixed(1) + " W/mK");
 
-    [magnetic_mat_conductivity, magnetic_mat_conductivity_label]= inflateParamter('magnetic_mat_conductivity', 0.5, 1.5, 0.5, 1);
+    inflateParamter(params, false, 'heater_power', 0.1, 2, 0.05, 0.8, (v) => "Rated power: " + v.toFixed(2) + " W/cm², " + (params.heater_width.get() / 10 * params.heater_height.get() / 10 * v).toFixed(0) + " W");
 
-    [bed_convection_top, bed_convection_top_label] = inflateParamter('bed_convection_top', 5, 50, 1, 8);
-    [bed_convection_bottom, bed_convection_bottom_label] = inflateParamter('bed_convection_bottom', 5, 50, 1, 8);
+    inflateParamter(params, false, 'bed_convection_top', 5, 50, 1, 8, (v) => "Top: " + v + " W/m²K");
+    inflateParamter(params, false, 'bed_convection_bottom', 5, 50, 1, 8, (v) => "Bottom: " + v + " W/m²K");
+
+    inflateParamter(params, false, 'ambient_temperature', 0, 80, 1, 22, (v) => "Ambient temp: " + v + " °C");
+    inflateParamter(params, false, 'target_temperature', 30, 120, 5, 110, (v) => "Target temperature: " + v + " °C");
+
+    // Ambient temperature is a special case. It should reset simulation if time = 0
+    params.ambient_temperature.el.addEventListener('change', () => { if (timer == 0) resetSimulation(); });
+    params.ambient_temperature.el.addEventListener('input', () => { if (timer == 0) resetSimulation(); });
+
+    document.getElementById("ambient_temperature_parameter").addEventListener('mouseenter', () => { ambientTempHover = true; });
+    document.getElementById("ambient_temperature_parameter").addEventListener('mouseleave', () => { ambientTempHover = false; });
 
     let rootElement = document.getElementById('simulation');
-    initializeScene(rootElement);
+    _initializeScene(rootElement);
 
     resetSimulation();
-    updateLabels(0);
 }
 
-function inflateParamter(parameter_name, min, max, step, value) {
+function updateStartButton() {
+    document.getElementById('startSimulationButton').innerHTML = isPaused ? "Play" : "Pause";
+}
+
+function inflateParamter(group, resetSimulationOnChange, parameter_name, min, max, step, value, updateLabelFunc) {
     document.getElementById(parameter_name+'_parameter').innerHTML = `
     <span id="${parameter_name}_label"></span>
     <div class="range-widget">
@@ -80,103 +75,131 @@ function inflateParamter(parameter_name, min, max, step, value) {
     let paramEl = document.getElementById(parameter_name);
     let paramLabelEl = document.getElementById(parameter_name + "_label");
 
-    paramEl.addEventListener('change', resetSimulation); 
-    paramEl.addEventListener('input', resetSimulation);
-    
-    document.getElementById(parameter_name+"_decrease").addEventListener('click', () => { paramEl.value = Number(paramEl.value) - step; resetSimulation(); });
-    document.getElementById(parameter_name+"_increase").addEventListener('click', () => { paramEl.value = Number(paramEl.value) + step; resetSimulation(); });
+    let updateLabel = () => paramLabelEl.innerText = updateLabelFunc(Number(paramEl.value));
+    let change = () => paramEl.dispatchEvent(new Event('change'));
 
-    return [paramEl, paramLabelEl];
+    paramEl.addEventListener('change', updateLabel); 
+    paramEl.addEventListener('input', updateLabel);
+    
+    let increase = document.getElementById(parameter_name+"_increase");
+    let decrease = document.getElementById(parameter_name+"_decrease")
+
+    decrease.addEventListener('click', () => { paramEl.value = Number(paramEl.value) - step; updateLabel(); });
+    increase.addEventListener('click', () => { paramEl.value = Number(paramEl.value) + step; updateLabel(); });
+    
+    group[parameter_name] = {};
+    group[parameter_name].el = paramEl;
+    group[parameter_name].label = paramLabelEl;
+    group[parameter_name].updateLabel = updateLabel;
+    group[parameter_name].get = () => Number(group[parameter_name].el.value);
+    group[parameter_name].set = (v) => { paramEl.value = v; change(); };
+
+    if (resetSimulationOnChange) { 
+        paramEl.addEventListener('change', resetSimulation); 
+        paramEl.addEventListener('input', resetSimulation);
+        increase.addEventListener('click', resetSimulation);
+        decrease.addEventListener('click', resetSimulation);
+    }
+
+    updateLabel();
+}
+
+function gatherParamterValues() {
+
+    let v = {};
+    for (const p in params) {
+        v[p] = params[p].get();
+    }
+
+    return v;
 }
 
 function resetSimulation() {
-    startButton.innerHTML = "Play";
+
+    let v = gatherParamterValues();
+    
+    document.getElementById('startSimulationButton').innerHTML = "Play";
     isPaused = true;
+    updateStartButton();
     timer = 0;
 
-    let ambientTemparature = Number(ambient_temperature.value);
-
-    let plateWidth = Number(plate_width.value);
-    let plateHeight = Number(plate_height.value);
-    let plateDepth =  Number(plate_depth.value);
-
-    let heaterWidth = Number(heater_width.value);
-    let heaterHeight = Number(heater_height.value);
-    let heaterConductivity = Number(heater_conductivity.value);
-    let heaterPower = Number(heater_power.value);
-
-    let magneticMatConductivity = Number(magnetic_mat_conductivity.value);
-
-    let bedConvectionTop = Number(bed_convection_top.value);
-    let bedConvectionBottom = Number(bed_convection_bottom.value);
-
-    if (heaterWidth > plateWidth) {
-        heaterWidth = plateWidth;
-        heater_width.value = heaterWidth;
+    // Make sure heater size is smaller than or equal to plate size
+    if (v.heater_width > v.plate_width) {
+        params.heater_width.set(v.plate_width);
+        return; // resetSimulation will be triggered again
     }
 
-    if (heaterHeight > plateHeight) {
-        heaterHeight = plateHeight;
-        heater_height.value = heaterHeight;
+    if (v.heater_height > v.plate_height) {
+        params.heater_height.set(v.plate_height)
+        return; // resetSimulation will be triggered again
     }
 
-    width = Math.floor(Number(plateWidth) / 1000 / cubeSizeX);
-    height = Math.floor(Number(plateHeight) / 1000 / cubeSizeY);
-    depth = Math.floor(Number(plateDepth) / 1000 / cubeSizeZ) + 2;
+    // Update thermistor locations
+    thermistorLocations = [];
+    thermistorLocations[thermistors.heater] = [v.plate_width / 2, v.plate_height / 2, 0];
+    thermistorLocations[thermistors.plate] = [v.plate_width / 2, v.plate_height - 10, v.plate_depth - 3];
 
-    let hW = Math.floor(Number(heaterWidth) / 1000 / cubeSizeX);
-    let hH = Math.floor(Number(heaterHeight) / 1000 / cubeSizeY);
+    _resetSimulation(v);
+    _resetVisualization(v);
 
-    let heaterPowerTotal = heaterPower * heaterWidth / 10 * heaterHeight / 10;
-
-    initializeSimulation(width, height, depth, cubeSizeX, cubeSizeY, cubeSizeZ, hW, hH, heaterPowerTotal, ambientTemparature, magneticMatConductivity, heaterConductivity, bedConvectionTop, bedConvectionBottom);
-    initializeVisualization(width, height, depth, cubeSizeX, cubeSizeY, cubeSizeZ);
-    updateLabels(0);
-
-    ambient_temperature_label.innerText = "Ambient temp: " + ambientTemparature + " °C";
-
-    plate_width_label.innerText = "Width: " + plateWidth + " mm";
-    plate_height_label.innerText = "Depth: " + plateHeight + " mm)";
-    plate_depth_label.innerText = "Thickness: " + plateDepth + " mm";
-
-    heater_width_label.innerText = "Width: " + heaterWidth + " mm";
-    heater_height_label.innerText = "Depth: " + heaterHeight + " mm";
-    heater_conductivity_label.innerText = "Heat conductivity: " + heaterConductivity.toFixed(1) + " W/mK";
-    heater_power_label.innerText = "Power: " + heaterPower.toFixed(2) + " W/cm³, " + heaterPowerTotal.toFixed(0) + " W";
-
-    magnetic_mat_conductivity_label.innerText = "Heat conductivity: " + magneticMatConductivity + " W/mK";
-
-    bed_convection_top_label.innerText = "Top: " + bedConvectionTop + " W/m²K";
-    bed_convection_bottom_label.innerText = "Bottom: " + bedConvectionBottom + " W/m²K";
+    // Set all UI labels
+    params["heater_power"].updateLabel();
+    updateLabels(v);
 }
 
 function animate() {
     if (!isPaused || stepOnce) {
         stepOnce = false;
-        timer++;
+        timer+=1;
 
-        let controlledWattage = updateSimulation();
-        updateLabels(controlledWattage);
+        let v = gatherParamterValues();
+        let thermistorIndex = [... document.querySelectorAll("input[name=control_thermistor]")].findIndex(e=>e.checked);
+        let selectedThermistorLocation = thermistorLocations[thermistorIndex];
+
+        controlledWattage = _iterateSimulation(v, selectedThermistorLocation);
+        updateLabels(v);
     }
 
-    updateVisualization(getTemperatures());
+    
+
+    if (timer > 0 || ambientTempHover) {
+        opacity = Math.min(opacity + 0.2, 1);
+    } else if (timer == 0) {
+        opacity = Math.max(opacity - 0.05, 0);
+    }
+
+    _updateVisualization(opacity);
     requestAnimationFrame(animate);
 }
 
-function updateLabels(controlledWattage) {
-    let temperatures = getTemperatures()
-    document.getElementById('timer').innerText = "Seconds: " + Math.floor(timer/60) + " min " + Math.floor(timer%60) + " s";
-    document.getElementById('temperature-center').innerText = "Center: " + temperatures[toGridIndex(Math.floor(width / 2), Math.floor(height / 2), depth - 1)].toFixed(1) + " °C";
-    document.getElementById('temperature-edge').innerText = "Edge: " + temperatures[toGridIndex(Math.floor(width / 2), 0, depth - 1)].toFixed(1) + " °C";
-    document.getElementById('temperature-corner').innerText = "Corner: " + temperatures[toGridIndex(0, 0, depth - 1)].toFixed(2) + " °C";
-    document.getElementById('temperature-core').innerText = "Core: " + temperatures[toGridIndex(Math.floor(width / 2), Math.floor(height / 2), Math.floor(depth / 2))].toFixed(2) + " °C";
-    document.getElementById('temperature-thermistor').innerText = "Build plate (back edge): " + temperatures[toGridIndex(Math.floor(width / 2), height - 1, depth - 2)].toFixed(2) + " °C";
-    document.getElementById('temperature-heater').innerText = "Heater: " + temperatures[toGridIndex(Math.floor(width / 2), Math.floor(height / 2), 0)].toFixed(2) + " °C";
-    document.getElementById('heater-controlled-wattage').innerText = "Heater: " + controlledWattage.toFixed(0) + " W";
-}
+function updateLabels(v) {
+    let minutes = Math.floor(timer/60);
+    let seconds = Math.floor(timer%60);
 
-function toGridIndex(x, y, z) {
-    return z * width * height + y * width + x;
+    if (minutes < 10) {
+        minutes = "0" + minutes;
+    }
+
+    if (seconds < 10) {
+        seconds = "0" + seconds;
+    }
+
+    document.getElementById('timer').innerText = "Simulation time: " + minutes + " min " + seconds + " s";
+    
+    let pW = v.plate_width;
+    let pH = v.plate_height;
+    let pD = v.plate_depth;
+
+    document.getElementById('temperature-center').innerText = "Surface center: " + _getTemperature([pW / 2, pH / 2, pD]).toFixed(1) + " °C";
+    document.getElementById('temperature-edge').innerText = "Surface edge: " + _getTemperature([pW / 2, 0, pD]).toFixed(1) + " °C";
+    document.getElementById('temperature-corner').innerText = "Surface corner: " + _getTemperature([0, 0, pD]).toFixed(1) + " °C";
+    
+    document.getElementById('temperature-core').innerText = "Plate core: " + _getTemperature([pW / 2, pH / 2, pD / 2]).toFixed(1) + " °C";
+
+    document.getElementById('temperature-heater').innerText = "Heater: " + _getTemperature(thermistorLocations[thermistors.heater]).toFixed(1) + " °C";
+    document.getElementById('temperature-plate').innerText = "Build plate (back edge): " + _getTemperature(thermistorLocations[thermistors.plate]).toFixed(1) + " °C";
+
+    document.getElementById('heater-controlled-wattage').innerText = "Controlled output: " + controlledWattage.toFixed(0) + " W";
 }
 
 init();
