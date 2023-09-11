@@ -1,10 +1,10 @@
-import { _initializeScene } from '/modules/visualization.js';
-import { _updateVisualization } from '/modules/visualization.js';
-import { resizeCanvas } from '/modules/visualization.js';
-import { _resetVisualization } from '/modules/visualization.js';
-import { _resetSimulation } from '/modules/simulation.js';
-import { _iterateSimulation } from '/modules/simulation.js';
-import { _getTemperature } from '/modules/simulation.js';
+import { _initializeScene } from './modules/visualization.js';
+import { _updateVisualization } from './modules/visualization.js';
+import { resizeCanvas } from './modules/visualization.js';
+import { _resetVisualization } from './modules/visualization.js';
+import { _resetSimulation } from './modules/simulation.js';
+import { _iterateSimulation } from './modules/simulation.js';
+import { _getTemperature } from './modules/simulation.js';
 
 let timer = 0;
 let isPaused = true;

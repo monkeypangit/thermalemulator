@@ -1,12 +1,12 @@
-import * as THREE from '/external/three/three.module.js';
-import { OrbitControls } from '/external/three/OrbitControls.js';
-import { GLTFLoader } from '/external/three/GLTFLoader.js';
+import * as THREE from '../external/three/three.module.js';
+import { OrbitControls } from '../external/three/OrbitControls.js';
+import { GLTFLoader } from '../external/three/GLTFLoader.js';
 
-import { _getSimulationResolutionX } from '/modules/simulation.js';
-import { _getSimulationResolutionY } from '/modules/simulation.js';
-import { _getSimulationResolutionZ } from '/modules/simulation.js';
-import { _getTemperature } from '/modules/simulation.js';
-import { _getTemperatureGrid } from '/modules/simulation.js';
+import { _getSimulationResolutionX } from './simulation.js';
+import { _getSimulationResolutionY } from './simulation.js';
+import { _getSimulationResolutionZ } from './simulation.js';
+import { _getTemperature } from './simulation.js';
+import { _getTemperatureGrid } from './simulation.js';
 
 let scene, cube, plate, heater, magneticMat, peiSheet, camera, renderer, controls;
 let cubeMaterials, plateMaterial, heaterMaterial, magneticMatMaterial, peiSheetMaterial;

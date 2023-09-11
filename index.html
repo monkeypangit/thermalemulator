@@ -2,22 +2,11 @@
 <html lang='en'>
  <head>
     <meta charset='utf-8'>
-    <link rel="stylesheet" href="style.css">
-    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="./style.css">
+    <link rel="shortcut icon" type="image/x-icon" href="./favicon.ico">
     <title>Heated bed thermal emulator</title>
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "/external/three/three.module.js",
-                "OrbitControls": "/external/three/OrbitControls.js",
-                "GLTFLoader": "/external/three/GLTFLoader.js",
-                "Visualization": "/modules/visualization.js",
-                "Simulation": "/modules/simulation.js"
-            }
-        }
-    </script>
-    <script src="/external/gpu/gpu-browser.js"></script>
-    <script type="module" src="app.js" defer></script>
+    <script src="./external/gpu/gpu-browser.js"></script>
+    <script type="module" src="./app.js" defer></script>
 </head>
 
 <body>
@@ -80,6 +69,6 @@
     </div>
     
     <div><h1 class="timer" id="timer"></h1></div>
-    <div class="fine-print"><span>(Version 0.1.11) Please do your own verification, accuracy of simulation is not guaranteed.</span></div>
+    <div class="fine-print"><span>(Version 0.1.12) Please do your own verification, accuracy of simulation is not guaranteed.</span></div>
 </div>
 </html>
