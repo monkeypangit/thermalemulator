@@ -1,5 +1,12 @@
-html                                    { overflow-y: scroll; } 
-body                                    { box-sizing: border-box; pointer-events: none; position: relative; margin: 0; padding:0; font-family: sans-serif; color: #fff; }
+html                                    { pointer-events: none; overflow-y: scroll; } 
+body                                    { box-sizing: border-box; position: relative; margin: 0; padding:0; font-family: sans-serif; color: #fff; }
+input, button, a                        { pointer-events: all; }
+
+a                                       { color: #8af; font-size: medium; }
+a:visited                               { color: #8af; }
+a:hover                                 { color: #acf; }
+a:active                                { color: #fff; }
+
 .simulation                             { position: fixed; pointer-events: all; z-index: -1; }
 
 .layout                                 { width: 100%; font-size: medium; display: flex; flex-direction: column; justify-content: space-between; align-items: center; }
@@ -10,9 +17,9 @@ body                                    { box-sizing: border-box; pointer-events
 .title                                  { margin: 1em 0 0 0; }
 
 .simulation-button-row                  { display: flex; flex-direction: row; }
-.simulation-button                      { pointer-events: all; font-size: medium; width: 5em; height: 2em; border: 0; padding: 0; margin: 0.8em 1em 0.5em 1em; border-radius: 1em; }
+.simulation-button                      { font-size: medium; width: 5em; height: 2em; border: 0; padding: 0; margin: 0.8em 1em 0.5em 1em; border-radius: 1em; }
 
-.radio-parameter                        { pointer-events: all; display: flex; flex-direction: row; }
+.radio-parameter                        { display: flex; flex-direction: row; }
 .radio-parameter input[type="radio"]    { margin: 0 0.5em 0 0; padding: 0; }
 
 .control-column                         { display: flex; flex-direction: column; margin: 0; font-size: small; justify-content: flex-end; align-items: center; }
@@ -23,8 +30,8 @@ h3.parameter-row-header                 { margin: 1.2em 0 0.5em 0; padding: 0; }
 x-parameter                             { margin: 0 0 0.5em 0; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-start; }
 .missing-parameter                      { margin: 0 0 0.5em 0; }
 .vertical-space                         { height: 0.5em; }
-.range-widget                           { width: 100%; pointer-events: all; display: flex; flex-direction: row; align-items: center; justify-content: flex-start; margin: 0.1em 0 0 0; }
-.parameter-button                       { pointer-events: all; border: 0; padding: 0; margin: 0; width: 1.5em; height: 1.5em; border-radius: 1.25em; }
+.range-widget                           { width: 100%; display: flex; flex-direction: row; align-items: center; justify-content: flex-start; margin: 0.1em 0 0 0; }
+.parameter-button                       { border: 0; padding: 0; margin: 0; width: 1.5em; height: 1.5em; border-radius: 1.25em; }
 .parameter-range                        { padding: 0; margin: 0 0.2em; flex: 2; }
 
 .timer                                  { position: fixed; bottom: 2em; width: 100%; display: flex; flex-direction: row; justify-content: center; margin: 0; padding: 0; }
