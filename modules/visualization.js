@@ -31,7 +31,7 @@ export function _initializeScene(domElement) {
     controls.maxDistance = 1.0;
 
     controls.rotateSpeed = 0.55;
-    controls.dampingFactor = 0.05;
+    controls.dampingFactor = 0.1;
     controls.enableDamping = true;
 
     controls.enablePan = false;
@@ -438,7 +438,7 @@ function colorFromTemperature(temperature) {
     // https://stackoverflow.com/a/76760561
 
     const minTemp = 20;
-    const maxTemp = 125;
+    const maxTemp = 120;
 
     const percent = (Math.max(Math.min(temperature, maxTemp), minTemp) - minTemp) / maxTemp;
 

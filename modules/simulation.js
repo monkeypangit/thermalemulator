@@ -116,7 +116,7 @@ export function _resetSimulation(p) {
 
 function updatePID(controlTemperature, targetTemperature, dt) {
     let Ep_new = (targetTemperature - controlTemperature);
-    Ei = 0.85 * Ei + Ep * dt
+    Ei = 0.90 * Ei + Ep * dt
     let Ed = (Ep_new - Ep) / dt;
 
     Ep = Ep_new;
@@ -130,11 +130,13 @@ export function _iterateSimulation(p, thermistorLocation) {
     let controlTemperature = _getTemperature(thermistorLocation);
 
     let thermistorLocationCompensation = thermistorLocation[2];
-    let buildPlateSizeCompensation = (width * height * cubeSizeX * cubeSizeY) / (0.25*0.25);
 
-    Kp = 200 * (1 + thermistorLocationCompensation * 500) * buildPlateSizeCompensation;
-    Ki = 75 / (1 + thermistorLocationCompensation * 25000) * buildPlateSizeCompensation;
-    Kd = 5 * (1 + thermistorLocationCompensation * 100000) * buildPlateSizeCompensation;
+    let targetTemperatureCompensation = p.target_temperature / 115;
+    let buildPlateSizeCompensation = 0.5 * (width * height * cubeSizeX * cubeSizeY) / (0.25*0.25);
+
+    Kp = 250 * (1 + thermistorLocationCompensation * 0.2) * targetTemperatureCompensation * buildPlateSizeCompensation;
+    Ki = 75 / (1 + thermistorLocationCompensation * 1) * targetTemperatureCompensation * buildPlateSizeCompensation;
+    Kd = 2.5 * (1 + thermistorLocationCompensation * 100) * buildPlateSizeCompensation;
 
     let k = updatePID(controlTemperature, p.target_temperature, stepSize);
 

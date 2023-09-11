@@ -44,7 +44,7 @@ function init() {
     inflateParamter(params, false, 'bed_convection_bottom', 5, 50, 1, 8, (v) => "Bottom: " + v + " W/m²K");
 
     inflateParamter(params, false, 'ambient_temperature', 0, 80, 1, 22, (v) => "Ambient temp: " + v + " °C");
-    inflateParamter(params, false, 'target_temperature', 30, 120, 5, 110, (v) => "Target temperature: " + v + " °C");
+    inflateParamter(params, false, 'target_temperature', 30, 115, 5, 110, (v) => "Target temperature: " + v + " °C");
 
     // Ambient temperature is a special case. It should reset simulation if time = 0
     params.ambient_temperature.el.addEventListener('change', () => { if (timer == 0) resetSimulation(); });
@@ -137,7 +137,7 @@ function resetSimulation() {
     // Update thermistor locations
     thermistorLocations = [];
     thermistorLocations[thermistors.heater] = [v.plate_width / 2, v.plate_height / 2, 0];
-    thermistorLocations[thermistors.plate] = [v.plate_width / 2, v.plate_height - 10, v.plate_depth - 3];
+    thermistorLocations[thermistors.plate] = [v.plate_width / 2, v.plate_height - 10, v.plate_depth - 2];
 
     _resetSimulation(v);
     _resetVisualization(v);
@@ -148,6 +148,8 @@ function resetSimulation() {
 }
 
 function animate() {
+    let starTime = Date.now();
+
     if (!isPaused || stepOnce) {
         stepOnce = false;
         timer+=1;
@@ -160,8 +162,6 @@ function animate() {
         updateLabels(v);
     }
 
-    
-
     if (timer > 0 || ambientTempHover) {
         opacity = Math.min(opacity + 0.2, 1);
     } else if (timer == 0) {
@@ -169,7 +169,11 @@ function animate() {
     }
 
     _updateVisualization(opacity);
-    requestAnimationFrame(animate);
+
+    // Cap framerate
+    let endTime = Date.now();
+    let duration = endTime - starTime;
+    setTimeout(() => requestAnimationFrame(animate), Math.max(0, 30 - duration));
 }
 
 function updateLabels(v) {
@@ -196,8 +200,29 @@ function updateLabels(v) {
     
     document.getElementById('temperature-core').innerText = "Plate core: " + _getTemperature([pW / 2, pH / 2, pD / 2]).toFixed(1) + " °C";
 
-    document.getElementById('temperature-heater').innerText = "Heater: " + _getTemperature(thermistorLocations[thermistors.heater]).toFixed(1) + " °C";
-    document.getElementById('temperature-plate').innerText = "Build plate (back edge): " + _getTemperature(thermistorLocations[thermistors.plate]).toFixed(1) + " °C";
+    let controlThermistorHeaderEl = document.getElementById('control_thermistor_header');
+
+    let temps = [];
+    temps[thermistors.heater] = _getTemperature(thermistorLocations[thermistors.heater]);
+    temps[thermistors.plate] = _getTemperature(thermistorLocations[thermistors.plate]);
+
+    let els = [];
+    els[thermistors.heater] = document.getElementById('temperature-heater');
+    els[thermistors.plate] = document.getElementById('temperature-plate');
+
+    let heaterOverheating = (temps[thermistors.heater] > 116);
+    let plateOverheating = (temps[thermistors.plate] > 116);
+
+    controlThermistorHeaderEl.style.color = (heaterOverheating || plateOverheating) ? "#FF0000" : "#FFFFFF";
+    controlThermistorHeaderEl.innerText = (heaterOverheating || plateOverheating) ? "Control thermistor (Overheating!)" : "Control thermistor";
+    
+    els[thermistors.heater].style.color = (heaterOverheating) ? "#FF0000" : "#FFFFFF";
+    els[thermistors.plate].style.color = (plateOverheating) ? "#FF0000" : "#FFFFFF";
+
+    els[thermistors.heater].innerText = "Heater: " + temps[thermistors.heater].toFixed(1) + " °C";
+    els[thermistors.plate].innerText = "Build plate (back edge): " + temps[thermistors.plate].toFixed(1) + " °C";
+
+    if (heaterOverheating) els[thermistors.heater].innerText += " (Overheating!)"
 
     document.getElementById('heater-controlled-wattage').innerText = "Controlled output: " + controlledWattage.toFixed(0) + " W";
 }
