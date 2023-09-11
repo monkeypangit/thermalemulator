@@ -20,7 +20,7 @@ let simulationKernel, gpu;
 
 // Silicone heater
 let siliconeHeaterDensity = 1100000; // g/m^3
-let siliconeHeaterCapacity = 1.3; // J/gK
+let siliconeHeaterCapacity = 0.9; // J/gK
 let siliconeHeaterConductivity; // W/mK (from UI)
 
 // Material properties
@@ -29,7 +29,7 @@ let aluminiumHeatCapacity = 0.900; // J/gK
 let aluminiumHeatConductivity = 273.0 // W/mK
 
 // Magnetic mat (and silicone heater at this point)
-let magneticMatDensity = 3500000; // g/m^3
+let magneticMatDensity = 1100000; // g/m^3
 let magneticMatHeatCapacity = 0.5; // J/gK
 let magneticMatHeatConductivity; // W/mK (from UI)
 
@@ -215,17 +215,27 @@ function toGridIndex(x, y, z) {
 }
 
 // Create GPU kernel for calculating heat exchange
+let inits = 0;
 function initializeGpu() {
 
     // There is an unresolved issue with the gpu.js library where behaves differently depending on browser.
     // So if the first way does not work, then try the other.
-    if (gpu == undefined) {
+    if (gpu == undefined || inits == 100) {
+        inits = 0;
+    
+        if (gpu != undefined) {
+            gpu.destroy();
+        }
+    
         try {
             gpu = new GPU();
         } catch (error) {
             gpu = new GPU.GPU();
         }
+    } else {
+        inits++
     }
+    
     
     simulationKernel = gpu.createKernel(function (
         temps, 
@@ -243,34 +253,27 @@ function initializeGpu() {
         heatConvectionTop, 
         heatConvectionBottom, 
         heatConvectionMid) {
-        
-        const surfConvTop = heatConvectionTop;
-        const surfConvMid = heatConvectionMid;
-        const surfConvBottom = heatConvectionBottom;
-        
-        const surfConv = 8; // Coefficient of surface convection
-        const kSb = 0.0000000567; // Stefan-Boltzmann constant
-        const e = 0.9; // Surface Emissivity Coefficient
-
-        const Ta = ambientTemparature; // ambient temperature
-        const Ta2 = (Ta + 273) * (Ta + 273);
-        const Ta4 = Ta2 * Ta2; // Ambient temperature in K raised to the power of 4
-
-        const z = Math.floor(this.thread.x / (width * height));
-        const y = Math.floor((this.thread.x - (z * width * height)) / width);
-        const x = this.thread.x % width;
 
         function toGridIndex(x, y, z, width, height) { return z * width * height + y * width + x; }
         function heatCoefficient(a, b) { return 2 / (1 / a + 1 / b); }
 
         const i = this.thread.x;
+
+        const surfConvTop = heatConvectionTop;
+        const surfConvMid = heatConvectionMid;
+        const surfConvBottom = heatConvectionBottom;
+        
+        const kSb = 0.0000000567; // Stefan-Boltzmann constant
+        const e = 0.8; // Surface Emissivity Coefficient
+
+        const z = Math.floor(this.thread.x / (width * height));
+        const y = Math.floor((this.thread.x - (z * width * height)) / width);
+        const x = this.thread.x % width;
+
         let dQ = 0.0;
 
         // heat input
         dQ += heatInput[i];
-
-        // Temperature differences
-        const dTa = temps[i] - Ta;
 
         if (x > 0) {
             let iN = toGridIndex(x - 1, y, z, width, height);
@@ -281,7 +284,14 @@ function initializeGpu() {
             // -k_h * A * dT * dt / dX;
             dQ -= k_h * cubeSizeY * cubeSizeZ * dT * dt / cubeSizeX;
         } else {
-            const A = cubeSizeY * cubeSizeZ; // Surface area
+            // Reduce delta temperature by 1/3
+            const Ta = (ambientTemparature + temps[i]) * 0.5;
+            // Ambient temperature in kelvin to the power of 3
+            const Ta4 = Math.pow(Ta + 273, 4);
+            // Temperature differences
+            const dTa = temps[i] - Ta;
+             // Surface area
+            const A = cubeSizeY * cubeSizeZ;
             // Heat convection on surface
             dQ -= surfConvMid * A * dt * dTa;
             // Heat radiation
@@ -294,6 +304,9 @@ function initializeGpu() {
             const k_h = heatCoefficient(conds[i], conds[iN]);
             dQ -= k_h * cubeSizeX * cubeSizeZ * dT * dt / cubeSizeY;
         } else {
+            const Ta = (ambientTemparature + temps[i]) * 0.5;
+            const Ta4 = Math.pow(Ta + 273, 4);
+            const dTa = temps[i] - Ta;
             const A = cubeSizeX * cubeSizeZ;
             dQ -= surfConvMid * A * dt * dTa;
             dQ -= e * kSb * A * (Math.pow(temps[i] + 273, 4) - Ta4) * dt;
@@ -305,6 +318,9 @@ function initializeGpu() {
             const k_h = heatCoefficient(conds[i], conds[iN]);
             dQ -= k_h * cubeSizeX * cubeSizeY * dT * dt / cubeSizeZ;
         } else {
+            const Ta = (ambientTemparature + temps[i]) * 0.5;
+            const Ta4 = Math.pow(Ta + 273, 4);
+            const dTa = temps[i] - Ta;
             const A = cubeSizeX * cubeSizeY;
             dQ -= surfConvBottom * A * dt * dTa;
             dQ -= e * kSb * A * (Math.pow(temps[i] + 273, 4) - Ta4) * dt;
@@ -316,6 +332,9 @@ function initializeGpu() {
             const k_h = heatCoefficient(conds[i], conds[iN]);
             dQ -= k_h * cubeSizeY * cubeSizeZ * dT * dt / cubeSizeX;
         } else {
+            const Ta = (ambientTemparature + temps[i]) * 0.5;
+            const Ta4 = Math.pow(Ta + 273, 4);
+            const dTa = temps[i] - Ta;
             const A = cubeSizeY * cubeSizeZ;
             dQ -= surfConvMid * A * dt * dTa;
             dQ -= e * kSb * A * (Math.pow(temps[i] + 273, 4) - Ta4) * dt;
@@ -327,6 +346,9 @@ function initializeGpu() {
             const k_h = heatCoefficient(conds[i], conds[iN]);
             dQ -= k_h * cubeSizeX * cubeSizeZ * dT * dt / cubeSizeY;
         } else {
+            const Ta = (ambientTemparature + temps[i]) * 0.5;
+            const Ta4 = Math.pow(Ta + 273, 4);
+            const dTa = temps[i] - Ta;
             const A = cubeSizeX * cubeSizeZ;
             dQ -= surfConvMid * A * dt * dTa;
             dQ -= e * kSb * A * (Math.pow(temps[i] + 273, 4) - Ta4) * dt;
@@ -338,6 +360,9 @@ function initializeGpu() {
             const k_h = heatCoefficient(conds[i], conds[iN]);
             dQ -= k_h * cubeSizeX * cubeSizeY * dT * dt / cubeSizeZ;
         } else {
+            const Ta = (ambientTemparature + temps[i]) * 0.5;
+            const Ta4 = Math.pow(Ta + 273, 4);
+            const dTa = temps[i] - Ta;
             const A = cubeSizeX * cubeSizeY;
             dQ -= surfConvTop * A * dt * dTa;
             dQ -= e * kSb * A * (Math.pow(temps[i] + 273, 4) - Ta4) * dt;

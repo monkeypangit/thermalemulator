@@ -49,10 +49,10 @@ export function _initializeScene(domElement) {
     magneticMatMaterial.metalness = 0.0;
     magneticMatMaterial.roughness = 0.9;
 
-    peiSheetMaterial = new THREE.MeshStandardMaterial({ color: 0x402508 }); 
-    peiSheetMaterial.metalness = 0.4;
-    peiSheetMaterial.roughness = 0.6;
-    //peiSheetMaterial.transparent = true;
+    peiSheetMaterial = new THREE.MeshStandardMaterial({ color: 0x503008 }); // 0x402508 
+    peiSheetMaterial.metalness = 0.5;
+    peiSheetMaterial.roughness = 0.5;
+    peiSheetMaterial.transparent = true;
 
     loadSceneGeometry();
 
@@ -164,9 +164,9 @@ function createPeiSheet(p) {
     }
 
     peiSheet = createPeiSheetRoundedRectangle(p.plate_width / 1000 - 0.008, p.plate_height / 1000 - 0.008, 0.0004, 0.0025, 0, peiSheetMaterial);
-    peiSheet.position.y = -0.0569; // p.plate_depth / 1000 + 0.002 + 0.0002; 
-    peiSheet.position.x = 0.04 + 0.04 - (p.plate_width / 10000);
-    peiSheet.position.z = -0.01 + 0.04 - (p.plate_height / 10000);
+    peiSheet.position.y = p.plate_depth / 1000 + 0.002 + 0.0002; // -0.0569; 
+    //peiSheet.position.x = 0.04 + 0.04 - (p.plate_width / 10000);
+    //peiSheet.position.z = -0.01 + 0.04 - (p.plate_height / 10000);
 
     scene.add(peiSheet);
 }
@@ -253,7 +253,7 @@ function createPeiSheetRoundedRectangle(width, height, extrudeDepth, cornerRadiu
     
     const mesh = new THREE.Mesh(geometry, material);
     mesh.rotateX(-Math.PI / 2);
-    mesh.rotateZ(Math.PI / 12 + 0.5 * width - 0.5 * height);
+    //mesh.rotateZ(Math.PI / 12 + 0.5 * width - 0.5 * height);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
 

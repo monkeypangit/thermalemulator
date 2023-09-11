@@ -78,5 +78,10 @@ $P=εσAT⁴ = 0.9 * 0.0000000567 * (0.3 * 0.3 * 2) * ((110 + 273)⁴-(30 + 274)
 
 At even higher temperatures the thermal radiation becomes completely dominant because of the temperature difference being raised to the power of 4 in the equation.
 
+## Approximations
+
+Currently in order to caibrate the model agains real world heated beds I use a an ambient temperature that is the mean of the given ambient temperature and the temperature of the target grid cell. This modified ambient temperature is used when calculating convection and radiation. This is not correct accoding to the model, but is seems to match better with real world obeservations.
+
+The convection calculation seems to be almost exactly spot on. In real heaters the resistance of the heating element increases somewhat with temperature making the power output lower. This is not taken into account in the simulation.
 
 

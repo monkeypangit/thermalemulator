@@ -40,8 +40,8 @@ function init() {
 
     inflateParamter(params, false, 'heater_power', 0.1, 2, 0.05, 0.8, (v) => "Rated power: " + v.toFixed(2) + " W/cm², " + (params.heater_width.get() / 10 * params.heater_height.get() / 10 * v).toFixed(0) + " W");
 
-    inflateParamter(params, false, 'bed_convection_top', 5, 50, 1, 8, (v) => "Top: " + v + " W/m²K");
-    inflateParamter(params, false, 'bed_convection_bottom', 5, 50, 1, 8, (v) => "Bottom: " + v + " W/m²K");
+    inflateParamter(params, false, 'bed_convection_top', 5, 25, 1, 8, (v) => "Top: " + v + " W/m²K");
+    inflateParamter(params, false, 'bed_convection_bottom', 5, 25, 1, 8, (v) => "Bottom: " + v + " W/m²K");
 
     inflateParamter(params, false, 'ambient_temperature', 0, 80, 1, 22, (v) => "Ambient temp: " + v + " °C");
     inflateParamter(params, false, 'target_temperature', 30, 115, 5, 110, (v) => "Target temperature: " + v + " °C");
@@ -183,8 +183,7 @@ function animate() {
     _updateVisualization(opacity);
 
     // Cap framerate
-    let endTime = Date.now();
-    let duration = endTime - starTime;
+    let duration = Date.now() - starTime;
     setTimeout(() => requestAnimationFrame(animate), Math.max(0, 30 - duration));
 }
 
