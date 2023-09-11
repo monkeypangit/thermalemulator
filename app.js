@@ -93,6 +93,12 @@ function inflateParamter(group, resetSimulationOnChange, parameter_name, min, ma
     group[parameter_name].updateLabel = updateLabel;
     group[parameter_name].get = () => Number(group[parameter_name].el.value);
     group[parameter_name].set = (v) => { paramEl.value = v; change(); };
+    group[parameter_name].resetSimulation = resetSimulationOnChange;
+    group[parameter_name].setDisabled = (disabled) => {
+        paramEl.disabled = disabled;
+        decrease.disabled = disabled;
+        increase.disabled = disabled;
+    };
 
     if (resetSimulationOnChange) { 
         paramEl.addEventListener('change', resetSimulation); 
@@ -160,6 +166,12 @@ function animate() {
 
         controlledWattage = _iterateSimulation(v, selectedThermistorLocation);
         updateLabels(v);
+    }
+
+    for (const p in params) {
+        if (params[p].resetSimulation) {
+            params[p].setDisabled(timer > 0);
+        }
     }
 
     if (timer > 0 || ambientTempHover) {
