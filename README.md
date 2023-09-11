@@ -1,3 +1,5 @@
+![Application screenshot](screenshot.png)
+
 # Heated bed thermal emulator for 3D printers
 This is an emulation of the heat performance of different heated beds for 3d printers. Specifically those that use an aluminium build plate, a silicone heater and a adhesive magnetic bed mat with a spring steel sheet.
 
