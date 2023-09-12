@@ -35,16 +35,16 @@ function init() {
     inflateParamter(params, true, 'heater_width', 80, 400, 5, 200, (v) =>"Width: " + v + " mm");
     inflateParamter(params, true, 'heater_height', 80, 400, 5, 200, (v) => "Depth: " + v + " mm)");
 
-    inflateParamter(params, true, 'magnetic_mat_conductivity', 0.5, 1.5, 0.5, 1, (v) => "Thermal conductivity: " + v.toFixed(1) + " W/mK");
-    inflateParamter(params, true, 'heater_conductivity', 0.5, 1.5, 0.5, 1, (v) => "Thermal conductivity: " + v.toFixed(1) + " W/mK");
+    inflateParamter(params, true, 'magnetic_mat_conductivity', 0.2, 1.0, 0.01, 0.3, (v) => "Thermal conductivity: " + v.toFixed(2) + " W/mK");
+    inflateParamter(params, true, 'heater_conductivity', 0.2, 1.0, 0.01, 0.3, (v) => "Thermal conductivity: " + v.toFixed(2) + " W/mK");
 
-    inflateParamter(params, false, 'heater_power', 0.1, 2, 0.05, 0.8, (v) => "Rated power: " + v.toFixed(2) + " W/cm², " + (params.heater_width.get() / 10 * params.heater_height.get() / 10 * v).toFixed(0) + " W");
+    inflateParamter(params, false, 'heater_power', 0.1, 2, 0.01, 0.8, (v) => "Rated power: " + v.toFixed(2) + " W/cm², " + (params.heater_width.get() / 10 * params.heater_height.get() / 10 * v).toFixed(0) + " W");
 
-    inflateParamter(params, false, 'bed_convection_top', 5, 25, 1, 8, (v) => "Top: " + v + " W/m²K");
-    inflateParamter(params, false, 'bed_convection_bottom', 5, 25, 1, 8, (v) => "Bottom: " + v + " W/m²K");
+    inflateParamter(params, false, 'bed_convection_top', 0, 25, 1, 8, (v) => "Top: " + v + " W/m²K");
+    inflateParamter(params, false, 'bed_convection_bottom', 0, 25, 1, 4, (v) => "Bottom: " + v + " W/m²K");
 
     inflateParamter(params, false, 'ambient_temperature', 0, 80, 1, 22, (v) => "Ambient temp: " + v + " °C");
-    inflateParamter(params, false, 'target_temperature', 30, 115, 5, 110, (v) => "Target temperature: " + v + " °C");
+    inflateParamter(params, false, 'target_temperature', 30, 115, 1, 110, (v) => "Target temperature: " + v + " °C");
 
     // Ambient temperature is a special case. It should reset simulation if time = 0
     params.ambient_temperature.el.addEventListener('change', () => { if (timer == 0) resetSimulation(); });
