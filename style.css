@@ -1,6 +1,6 @@
 html                                    { pointer-events: none; overflow-y: scroll; } 
 body                                    { box-sizing: border-box; position: relative; margin: 0; padding:0; font-family: sans-serif; color: #fff; }
-input, button, a                        { pointer-events: all; }
+input, button, a, label                 { pointer-events: all; }
 
 a                                       { color: #8af; font-size: medium; }
 a:visited                               { color: #8af; }
