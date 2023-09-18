@@ -80,35 +80,28 @@ export function _resetSimulation(p) {
 
     initializeGpu();
 
-    for (let x = 0; x < width; x++) {
+    const temperature = p.ambient_temperature;
+    var volumetricHeatCapacity;
+    let heatConductivity;
+    
+    for (let z = 0; z < depth; z++) {
+        if (z == 0) {
+            volumetricHeatCapacity = siliconeHeaterCapacity * siliconeHeaterDensity;
+            heatConductivity = siliconeHeaterConductivity;
+        } else if (z == depth - 1 ) {
+            volumetricHeatCapacity = magneticMatHeatCapacity * magneticMatDensity;
+            heatConductivity = magneticMatHeatConductivity;
+        } else {
+            volumetricHeatCapacity = aluminiumHeatCapacity * aluminiumDensity;
+            heatConductivity = aluminiumHeatConductivity;
+        } 
+
         for (let y = 0; y < height; y++) {
-            for (let z = 0; z < depth; z++) {
-                const temperature = p.ambient_temperature;
-                if (z == 0) {
-                    const heatCapacity = siliconeHeaterCapacity * siliconeHeaterDensity * cubeSizeX * cubeSizeY * cubeSizeZ;
-                    const heatConductivity = siliconeHeaterConductivity;
-
-                    let i = toGridIndex(x, y, z)
-                    temperatures[i] = temperature;
-                    conductivities[i] = heatConductivity; // W/mK
-                    heatCapacities[i] = heatCapacity; // J/(cube*K)
-                } else if (z == depth - 1 ) {
-                    const heatCapacity = magneticMatHeatCapacity * magneticMatDensity * cubeSizeX * cubeSizeY * cubeSizeZ;
-                    const heatConductivity = magneticMatHeatConductivity;
-
-                    let i = toGridIndex(x, y, z)
-                    temperatures[i] = temperature;
-                    conductivities[i] = heatConductivity; // W/mK
-                    heatCapacities[i] = heatCapacity; // J/(cube*K)
-                } else {
-                    const heatCapacity = aluminiumHeatCapacity * aluminiumDensity * cubeSizeX * cubeSizeY * cubeSizeZ;
-                    const heatConductivity = aluminiumHeatConductivity;
-
-                    let i = toGridIndex(x, y, z)
-                    temperatures[i] = temperature;
-                    conductivities[i] = heatConductivity; // W/mK
-                    heatCapacities[i] = heatCapacity; // J/(cube*K)
-                } 
+            for (let x = 0; x < width; x++) {
+                let i = toGridIndex(x, y, z)
+                temperatures[i] = temperature;
+                conductivities[i] = heatConductivity; // W/mK
+                heatCapacities[i] = volumetricHeatCapacity * cubeSizeX * cubeSizeY * cubeSizeZ; // J/(cube*K)
             }
         }
     }
@@ -159,8 +152,8 @@ export function _iterateSimulation(p, thermistorLocation) {
     const heaterEndX = heaterStartX + heaterWidth;
     const heaterEndY = heaterStartY + heaterHeight;
 
-    for (let x = 0; x < width; x++) {
-        for (let y = 0; y < height; y++) {
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
             heatInput[toGridIndex(x, y, 0)] = (x >= heaterStartX  && x < heaterEndX) && (y >= heaterStartY && y < heaterEndY) ? joulePerGridElement : 0;
         }
     }
