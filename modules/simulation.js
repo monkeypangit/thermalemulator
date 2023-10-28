@@ -26,7 +26,7 @@ let siliconeHeaterConductivity; // W/mK (from UI)
 // Material properties
 let aluminiumDensity = 2710000; // g/m^3
 let aluminiumHeatCapacity = 0.900; // J/gK
-let aluminiumHeatConductivity = 273.0 // W/mK
+let aluminiumHeatConductivity; // W/mK (from UI)
 
 // Magnetic mat (and silicone heater at this point)
 let magneticMatDensity = 1100000; // g/m^3
@@ -67,6 +67,7 @@ export function _resetSimulation(p) {
     conductivities = new Float32Array(width * height * depth);
     heatCapacities = new Float32Array(width * height * depth);
 
+    aluminiumHeatConductivity = p.plate_conductivity;
     siliconeHeaterConductivity = p.heater_conductivity;
     magneticMatHeatConductivity = p.magnetic_mat_conductivity;
     
@@ -277,9 +278,9 @@ function initializeGpu() {
             // -k_h * A * dT * dt / dX;
             dQ -= k_h * cubeSizeY * cubeSizeZ * dT * dt / cubeSizeX;
         } else {
-            // Reduce delta temperature by 1/3
+            // Ambient temperature
             const Ta = ambientTemparature;
-            // Ambient temperature in kelvin to the power of 3
+            // Ambient temperature in kelvin to the power of 4
             const Ta4 = Math.pow(Ta + 273, 4);
             // Temperature differences
             const dTa = temps[i] - Ta;

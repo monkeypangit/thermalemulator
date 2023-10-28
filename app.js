@@ -31,6 +31,7 @@ function init() {
     inflateParamter(params, true, 'plate_width', 100, 400, 5, 250, (v) => "Width: " + v + " mm");
     inflateParamter(params, true, 'plate_height', 100, 400, 5, 250, (v) => "Depth: " + v + " mm)");
     inflateParamter(params, true, 'plate_depth', 4, 10, 2, 8, (v) => "Thickness: " + v + " mm)");
+    inflateParamter(params, true, 'plate_conductivity', 50, 300, 10, 120, (v) => "Thermal conductivity: " + v + " W/mK)");
 
     inflateParamter(params, true, 'heater_width', 80, 400, 5, 200, (v) =>"Width: " + v + " mm");
     inflateParamter(params, true, 'heater_height', 80, 400, 5, 200, (v) => "Depth: " + v + " mm)");
