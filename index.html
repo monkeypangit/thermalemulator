@@ -5,16 +5,16 @@
     <link rel="stylesheet" href="./style.css">
     <link rel="shortcut icon" type="image/x-icon" href="./favicon.ico">
     <title>Heated bed thermal emulator</title>
-    <script src="./external/gpu/gpu-browser.js"></script>
+    <link rel="stylesheet" href="./external/uplot/uPlot.min.css">
     <script type="module" src="./app.js" defer></script>
 </head>
 
 <body>
+    <script src="./external/uplot/uPlot.iife.min.js"></script>
     <div id="simulation" class="simulation"></div>
     <div id="ui" class="layout">
         <div class="title-wrapper">
             <h2 class="title">Heated bed thermal emulator</h2>
-            <h3 class="warning">This is beta software. Please do not assume it is accurate.</h3>
             <div class="simulation-button-row">
                 <button class="simulation-button" id="startSimulationButton">Play</button>
                 <button class="simulation-button" id="stepSimulationButton">Step</button>
@@ -35,18 +35,28 @@
                 <div id="temperature-edge"></div>
                 <div id="temperature-corner"></div>
                 <div id="temperature-core"></div>
-                
                 <h3 id="control_thermistor_header" class="parameter-row-header">Control thermistor</h3>
                 <div class="radio-parameter"><input type="radio" autocomplete="off" id="control_thermistor_heater" name="control_thermistor" value="0" checked><label for="control_thermistor_heater" id="temperature-heater"></label></div>
                 <div class="radio-parameter"><input type="radio" autocomplete="off" id="control_thermistor_build_plate" name="control_thermistor" value="1"><label for="control_thermistor_build_plate" id="temperature-plate"></label></div>
+                <div class="vertical-space"></div>
+                <div id="plot" class="plot"></div>
                 <div class="vertical-space"></div>
                 <x-parameter id="target_temperature_parameter"></x-parameter>
 
                 <h3 class="parameter-row-header">Heater power</h3>
                 <div class="missing-parameter"><span id="heater-controlled-wattage"></span></div>
                 <x-parameter id="heater_power_parameter"></x-parameter>
+
             </div>
             <div class="parameter-column">
+                
+                <h3 class="parameter-row-header">Bed type</h3>
+                <div class="toggle-switch">
+                    <div class="radio-parameter"><input type="radio" autocomplete="off" id="bed_type_magnetic_sticker" name="bed_type" value="0" checked><label for="bed_type_magnetic_sticker">Magnetic sticker</label></div>
+                    <div class="radio-parameter"><input type="radio" autocomplete="off" id="bed_type_embedded_magnets" name="bed_type" value="1"><label for="bed_type_embedded_magnets">Embedded magnets</label></div>
+                </div>
+                <div class="vertical-space"></div>
+
                 <h3 class="parameter-row-header">Build plate</h3>
                 <x-parameter id="plate_width_parameter"></x-parameter>
                 <x-parameter id="plate_height_parameter"></x-parameter>
@@ -56,21 +66,22 @@
                 <h3 class="parameter-row-header">Heater</h3>
                 <x-parameter id="heater_width_parameter"></x-parameter>
                 <x-parameter id="heater_height_parameter"></x-parameter>
-                <div class="missing-parameter">Thickness: 2 mm (fixed)</div>
+                <div class="missing-parameter">Thickness: 1.5 mm (fixed)</div>
                 <x-parameter id="heater_conductivity_parameter"></x-parameter>
 
                 <h3 class="parameter-row-header">Magnetic sticker</h3>
-                <div class="missing-parameter">Thickness: 2 mm (fixed)</div>
-                <x-parameter id="magnetic_mat_conductivity_parameter"></x-parameter>
+                <div class="missing-parameter">Thickness: 1.5 mm (fixed)</div>
+                <x-parameter id="magnetic_sticker_conductivity_parameter"></x-parameter>
 
                 <h3 class="parameter-row-header">PEI spring steel sheet </h3>
-                <div class="missing-parameter">Too thin to be simulated separately. It is combined with the magnetic sticker.</div>
-                <div class="missing-parameter" class="github-url"><a href="https://github.com/monkeypangit/thermalemulator" target=”_blank”>Github project page</a></div>
+                <div class="missing-parameter">Thickness: 0.75 mm (fixed)</div>
+                <x-parameter id="pei_sheet_conductivity_parameter"></x-parameter>
             </div>
         </div>
     </div>
     
     <div><h1 class="timer" id="timer"></h1></div>
-    <div class="fine-print"><span>(Version 0.1.16) Please do your own verification, accuracy of simulation is not guaranteed.</span></div>
+    <div class="fine-print"><span>(Version 0.2.00) Please do your own verification, accuracy of simulation is not guaranteed.</span><div class="github-url"><a href="https://github.com/monkeypangit/thermalemulator" target=”_blank”>Github project page</a></div></div>
 </div>
+</script>
 </html>
