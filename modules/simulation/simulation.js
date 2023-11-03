@@ -222,6 +222,8 @@ export class Simulation {
     }
 
     recalculatePIDValues(useEmbeddedBedThermistor) {
+        // Ziegler-Nichols tuning rules
+
         const embeddedThermistorFactor = useEmbeddedBedThermistor ? 5 : 1;
     
         // Approximate steady state heat convection and radiation as a function of heater wattage at 90 degrees
