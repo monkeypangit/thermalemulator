@@ -36,7 +36,13 @@ x-parameter                             { margin: 0 0 0.5em 0; display: flex; fl
 
 .timer                                  { position: fixed; bottom: 1.5em; width: 100%; display: flex; flex-direction: row; justify-content: center; margin: 0; padding: 0; }
 .fine-print                             { position: fixed; bottom: 1em; width: 100%; display: flex; flex-direction: row; justify-content: center; color: #fffa; font-size: small; }
+.plot-wrapper                           { position: relative; }
 .plot                                   { position: relative; width: 107%; height: 11em; margin-bottom: 0.8em; }
+.plot-button                            { z-index: 100; pointer-events: all; user-select: none; position: absolute; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background-color: #fff; border-radius: 0.2em; font-size: 2em; color: #08FF; }
+.plot-button:hover                      { background-color: #ccc; }
+.plot-button:active                     { background-color: #cef; }
+.download                               { right: 10px; top: 0px;  transform: rotate(180deg); }
+.magnify                                { box-sizing: border-box; right: 48px; top: 0px; font-size: 1.5em; padding-bottom: 0.2em; }
 
 .toggle-switch                          { width: 100%; display: flex; align-items: stretch; overflow: hidden; font-size: 0.9em; font-weight: bold; }
 .toggle-switch .radio-parameter         { flex-grow: 1; }
@@ -49,3 +55,4 @@ x-parameter                             { margin: 0 0 0.5em 0; display: flex; fl
 .toggle-switch input:not(:checked) + label      { color: #000; }
 .toggle-switch input:disabled + label           { background-color: #ddd; }
 .toggle-switch input:disabled:checked + label   { background-color: #aaa; }
+

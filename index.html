@@ -12,6 +12,7 @@
 <body>
     <script src="./external/uplot/uPlot.iife.min.js"></script>
     <div id="simulation" class="simulation"></div>
+    <div id="bit_plot" class="plot-big"></div>
     <div id="ui" class="layout">
         <div class="title-wrapper">
             <h2 class="title">Heated bed thermal emulator</h2>
@@ -39,7 +40,11 @@
                 <div class="radio-parameter"><input type="radio" autocomplete="off" id="control_thermistor_heater" name="control_thermistor" value="0" checked><label for="control_thermistor_heater" id="temperature-heater"></label></div>
                 <div class="radio-parameter"><input type="radio" autocomplete="off" id="control_thermistor_build_plate" name="control_thermistor" value="1"><label for="control_thermistor_build_plate" id="temperature-plate"></label></div>
                 <div class="vertical-space"></div>
-                <div id="plot" class="plot"></div>
+                <div class="plot-wrapper">
+                    <!-- <div id="magnify" class="plot-button magnify">▢</div> -->
+                    <div id="download" class="plot-button download">⇪</div>
+                    <div id="plot" class="plot"></div>
+                </div>
                 <div class="vertical-space"></div>
                 <x-parameter id="target_temperature_parameter"></x-parameter>
 
@@ -70,7 +75,7 @@
                 <x-parameter id="heater_conductivity_parameter"></x-parameter>
 
                 <h3 class="parameter-row-header">Magnetic sticker</h3>
-                <div class="missing-parameter">Thickness: 1.5 mm (fixed)</div>
+                <div class="missing-parameter">Thickness: 1.2 mm (fixed)</div>
                 <x-parameter id="magnetic_sticker_conductivity_parameter"></x-parameter>
 
                 <h3 class="parameter-row-header">PEI spring steel sheet </h3>
@@ -81,7 +86,7 @@
     </div>
     
     <div><h1 class="timer" id="timer"></h1></div>
-    <div class="fine-print"><span>(Version 0.2.00) Please do your own verification, accuracy of simulation is not guaranteed.</span><div class="github-url"><a href="https://github.com/monkeypangit/thermalemulator" target=”_blank”>Github project page</a></div></div>
+    <div class="fine-print"><span>(Version 0.2.1) Please do your own verification, accuracy of simulation is not guaranteed.</span><div class="github-url"><a href="https://github.com/monkeypangit/thermalemulator" target=”_blank”>Github project page</a></div></div>
 </div>
 </script>
 </html>

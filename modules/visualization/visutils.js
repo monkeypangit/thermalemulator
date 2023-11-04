@@ -157,7 +157,7 @@ export function createGradientSkysphere() {
     return mesh;
 }
 
-export function loadSceneGeometry(scene, progressCallback) {
+export function loadSceneGeometry(scene) {
     const loader = new GLTFLoader();
     let yPosition = -0.06
 

@@ -1,5 +1,6 @@
 import * as VISUALIZATION from './modules/visualization/visualization.js';
 import * as SIMULATION from './modules/simulation/simulation.js';
+import * as PLOT from './modules/plot/plot.js';
 
 {
 const mmPerM = 1000; // millimeters per meter
@@ -7,6 +8,7 @@ const resolutionXY = 0.005; // X and Y resolution of simulation in meters
 
 const simulation = new SIMULATION.Simulation();
 const visualization = new VISUALIZATION.Visualization(simulation);
+const plot = new PLOT.Plot(document.getElementById('plot'));
 
 let timer = 0;
 let isPaused = true;
@@ -19,14 +21,11 @@ let heatBedDepth;
 
 let useEmbeddedBedThermistor = false;
 let controlThermistorLocation;
-let hasMagneticSticker;
+const  bedTypeStickerEl = document.getElementById('bed_type_magnetic_sticker');
 
 let layers = [];
 
 let params = {};
-
-let plot;
-let plotData = [];
 
 const thermistors = { 
     heater: 0, 
@@ -88,6 +87,8 @@ function init() {
     document.getElementById('bed_type_magnetic_sticker').addEventListener('change', resetSimulation);
     document.getElementById('bed_type_embedded_magnets').addEventListener('change', resetSimulation);
 
+    document.getElementById('download').addEventListener('click', () => plot.download());
+
     inflateParamter(params, true, 'plate_width', 100, 400, 5, 250, (v) => "Width: " + v + " mm");
     inflateParamter(params, true, 'plate_height', 100, 400, 5, 250, (v) => "Depth: " + v + " mm)");
     inflateParamter(params, true, 'plate_depth', 3, 12, 1, 8, (v) => "Thickness: " + v + " mm)");
@@ -117,49 +118,7 @@ function init() {
 
     document.getElementById("ambient_temperature_parameter").addEventListener('mouseenter', () => { ambientTempHover = true; });
     document.getElementById("ambient_temperature_parameter").addEventListener('mouseleave', () => { ambientTempHover = false; });
-
     document.getElementById('simulation').appendChild(visualization.getDomElement());
-
-    // Sample data for demonstration purposes
-    plotData = [[],[]];
-
-    const plotEl = document.getElementById('plot');
-
-    const options = {
-        width: plotEl.clientWidth, // Set width of the chart
-        height: plotEl.clientHeight, // Set height of the chart
-        scales: {
-            x: { range: [0, 900]},
-            y: { range: [0, 150]},
-        },
-        legend: {
-            show: false
-        },
-        axes: [
-            { 
-                values: (u, vals, space) => vals.map(v => (v / 60).toFixed(0)), 
-                stroke: "#FFFFFF80", 
-                grid: { stroke: "#FFFFFF80" }, 
-                ticks: { stroke: "#FFFFFF80" }, 
-                font: "10px Arial white", 
-                size: 25, 
-            },
-            { 
-                values: (u, vals, space) => vals.map(v => (v).toFixed(0)), 
-                size: 35, 
-                stroke: "#FFFFFF80", 
-                grid: { stroke: "#FFFFFF80" }, 
-                ticks: { stroke: "#FFFFFF80" }, 
-                font: "10px Arial white", 
-            }
-        ],
-        series: [
-            {}, // This is a placeholder for the X-axis
-            { stroke: "red", width: 1, label: "Temperature (°C)" }
-        ]
-    };
-
-    plot = new uPlot(options, plotData, plotEl);
     
     resetSimulation();
 }
@@ -178,28 +137,24 @@ function updateControlThermistor() {
 function resetSimulation() {
     document.getElementById('startSimulationButton').innerHTML = "Play";
     isPaused = true;
-    updateStartButton();
     timer = 0;
 
-    plotData[0].length = 0;
-    plotData[1].length = 0;
-    plot.setData(plotData);
+    updateStartButton();
+    
+    plot.reset();
 
-    hasMagneticSticker = document.getElementById('bed_type_magnetic_sticker').checked;
-
+    // Update material properties from UI
     materials.heater.conductivity = params.heater_conductivity.get();
     materials.buildPlate.conductivity = params.plate_conductivity.get();
     materials.magneticSticker.conductivity = params.magnetic_sticker_conductivity.get();
     materials.peiSpringSteelSheet.conductivity = params.pei_sheet_conductivity.get();
 
-    layers = [
-        { material: materials.heater, sizeZ: 0.0015 },
-        { material: materials.buildPlate, sizeZ: params.plate_depth.get() / mmPerM },
-        { material: materials.magneticSticker, sizeZ: 0.0012 },
-        { material: materials.peiSpringSteelSheet, sizeZ: 0.00075 },
-    ];
-
-    if (!hasMagneticSticker) layers.splice(2,1);
+    //  Add layers
+    layers = [];
+    layers.push({ material: materials.heater, sizeZ: 0.0015 });
+    layers.push({ material: materials.buildPlate, sizeZ: params.plate_depth.get() / mmPerM });
+    if (bedTypeStickerEl.checked) layers.push({ material: materials.magneticSticker, sizeZ: 0.0012 });
+    layers.push({ material: materials.peiSpringSteelSheet, sizeZ: 0.00075 });
 
     // Make sure heater size is smaller than or equal to plate size
     if (params.heater_width.get() > params.plate_width.get()) {
@@ -240,7 +195,7 @@ function resetSimulation() {
         params.heater_height.get() / mmPerM,
         resolutionXY,
         layers,
-        hasMagneticSticker,
+        bedTypeStickerEl.checked,
     );
 
     // Set all UI labels
@@ -271,9 +226,7 @@ function animate() {
             const l = controlThermistorLocation;
             const controlTemp = simulation.getTemperature(l[0], l[1], l[2]);
 
-            plotData[0].push(timer);
-            plotData[1].push(controlTemp);
-            plot.setData(plotData);
+            plot.add(timer, controlTemp);
         }
 
         updateLabels();
