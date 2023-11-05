@@ -3,7 +3,7 @@ export class Plot {
 
     constructor(plotEl) {
         // Sample data for demonstration purposes
-        this.plotData = [[],[]];
+        this.plotData = [Array(900).fill().map((_, i) => i+1), [], [], [], [], [], [], []];
 
         const options = {
             width: plotEl.clientWidth, // Set width of the chart
@@ -18,24 +18,29 @@ export class Plot {
             axes: [
                 { 
                     values: (u, vals, space) => vals.map(v => (v / 60).toFixed(0)), 
-                    stroke: "#FFFFFF80", 
-                    grid: { stroke: "#FFFFFF80" }, 
-                    ticks: { stroke: "#FFFFFF80" }, 
-                    font: "10px Arial white", 
+                    stroke: "#FFFFFFFF", 
+                    grid: { stroke: "#FFFFFF40" }, 
+                    ticks: { stroke: "#FFFFFF40" }, 
+                    font: "11px Arial white", 
                     size: 25, 
                 },
                 { 
                     values: (u, vals, space) => vals.map(v => (v).toFixed(0)), 
                     size: 35, 
-                    stroke: "#FFFFFF80", 
-                    grid: { stroke: "#FFFFFF80" }, 
-                    ticks: { stroke: "#FFFFFF80" }, 
-                    font: "10px Arial white", 
+                    stroke: "#FFFFFFFF", 
+                    grid: { stroke: "#FFFFFF40" }, 
+                    ticks: { stroke: "#FFFFFF40" }, 
+                    font: "11px Arial white", 
                 }
             ],
             series: [
                 {}, // This is a placeholder for the X-axis
-                { stroke: "red", width: 1, label: "Temperature (°C)" }
+                { stroke: "red", width: 1, label: "(°C)" },
+                { stroke: "#FFFFFFA0", width: 1, label: "(°C)" },
+                { stroke: "#FFFFFF80", width: 1, label: "(°C)" },
+                { stroke: "#FFFFFF60", width: 1, label: "(°C)" },
+                { stroke: "#FFFFFF40", width: 1, label: "(°C)" },
+                { stroke: "#FFFFFF20", width: 1, label: "(°C)" },
             ]
         };
 
@@ -43,14 +48,17 @@ export class Plot {
     }
 
     add(time, temp) {
-        this.plotData[0].push(time);
         this.plotData[1].push(temp);
         this.plot.setData(this.plotData);
     }
 
     reset() {
-        this.plotData[0].length = 0;
-        this.plotData[1].length = 0;
+        this.plotData[6] = this.plotData[5];
+        this.plotData[5] = this.plotData[4];
+        this.plotData[4] = this.plotData[3];
+        this.plotData[3] = this.plotData[2];
+        this.plotData[2] = this.plotData[1];
+        this.plotData[1] = [];
         this.plot.setData(this.plotData);
     }
 
