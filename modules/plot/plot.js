@@ -1,4 +1,6 @@
 
+import uPlot from '../../external/uplot/uPlot.esm.js';
+
 export class Plot {
 
     constructor(plotEl) {
@@ -35,12 +37,12 @@ export class Plot {
             ],
             series: [
                 {}, // This is a placeholder for the X-axis
-                { stroke: "red", width: 1, label: "(°C)" },
-                { stroke: "#FFFFFFA0", width: 1, label: "(°C)" },
-                { stroke: "#FFFFFF80", width: 1, label: "(°C)" },
-                { stroke: "#FFFFFF60", width: 1, label: "(°C)" },
-                { stroke: "#FFFFFF40", width: 1, label: "(°C)" },
                 { stroke: "#FFFFFF20", width: 1, label: "(°C)" },
+                { stroke: "#FFFFFF40", width: 1, label: "(°C)" },
+                { stroke: "#FFFFFF60", width: 1, label: "(°C)" },
+                { stroke: "#FFFFFF80", width: 1, label: "(°C)" },
+                { stroke: "#FFFFFFA0", width: 1, label: "(°C)" },
+                { stroke: "red", width: 1, label: "(°C)" },
             ]
         };
 
@@ -48,17 +50,17 @@ export class Plot {
     }
 
     add(time, temp) {
-        this.plotData[1].push(temp);
+        this.plotData[6].push(temp);
         this.plot.setData(this.plotData);
     }
 
     reset() {
-        this.plotData[6] = this.plotData[5];
-        this.plotData[5] = this.plotData[4];
-        this.plotData[4] = this.plotData[3];
-        this.plotData[3] = this.plotData[2];
-        this.plotData[2] = this.plotData[1];
-        this.plotData[1] = [];
+        this.plotData[1] = this.plotData[2];
+        this.plotData[2] = this.plotData[3];
+        this.plotData[3] = this.plotData[4];
+        this.plotData[4] = this.plotData[5];
+        this.plotData[5] = this.plotData[6];
+        this.plotData[6] = [];
         this.plot.setData(this.plotData);
     }
 
