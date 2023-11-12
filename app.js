@@ -53,12 +53,13 @@ const materials = {
         },
 
     magneticSticker:
-        // Magnetic silicone rubber sheet (Magnetic sticker)
-        // I have not been able to find any reference on this so these numbers are a best estimate.
+        // Strontium Ferrit ABS blend (Based off of GraviFlex® 200)
+        // I have not been able to find any complete datasheet on any magnetic sticker so these values are a blend of different sources.
+        // NOTE: It seems Strontium Ferrit has a thermal conductivity of 0.8 at room temperature and 0.2 at 100 degrees C so this may have to be taken into account.
         {
-            density: 1100000, // g/m^3
+            density: 3700000, // g/m^3
             capacity: 0.9, // J/gK
-            conductivity: 0.3, // W/mK (from UI)
+            conductivity: 0.25, // W/mK (from UI)
             emissivity: 0.9,
         },
 
@@ -71,7 +72,7 @@ const materials = {
         // Conductivity: (2*0.125+0.5)/(2×0.125/0.20+0.5/50) = 0.59
         {
             density: 5500000, // g/m^3
-            capacity: 0.58, // J/gK
+            capacity: 0.6, // J/gK
             conductivity: 0.6, // W/mK (from UI)
             emissivity: 0.9,
         },
@@ -83,7 +84,7 @@ function init() {
 
     document.getElementById('startSimulationButton').addEventListener('click', () => { isPaused = !isPaused; updateStartButton(); });
     document.getElementById('stepSimulationButton').addEventListener('click', () => { isPaused = true; stepOnce = true; updateStartButton(); });
-    document.getElementById('resetSimulationButton').addEventListener('click', resetSimulation);
+    document.getElementById('resetSimulationButton').addEventListener('click', () => { plot.reset(); resetSimulation()});
     document.getElementById('bed_type_magnetic_sticker').addEventListener('change', resetSimulation);
     document.getElementById('bed_type_embedded_magnets').addEventListener('change', resetSimulation);
 
@@ -97,7 +98,7 @@ function init() {
     inflateParamter(params, true, 'heater_width', 80, 400, 5, 200, (v) =>"Width: " + v + " mm");
     inflateParamter(params, true, 'heater_height', 80, 400, 5, 200, (v) => "Depth: " + v + " mm)");
 
-    inflateParamter(params, true, 'magnetic_sticker_conductivity', 0.2, 1.0, 0.01, materials.magneticSticker.conductivity, (v) => "Thermal conductivity: " + v.toFixed(2) + " W/mK");
+    inflateParamter(params, true, 'magnetic_sticker_conductivity', 0.05, 0.5, 0.01, materials.magneticSticker.conductivity, (v) => "Thermal conductivity: " + v.toFixed(2) + " W/mK");
     inflateParamter(params, true, 'heater_conductivity', 0.2, 2.0, 0.01, materials.heater.conductivity, (v) => "Thermal conductivity: " + v.toFixed(2) + " W/mK");
     inflateParamter(params, true, 'pei_sheet_conductivity', 0.2, 2.0, 0.01, materials.peiSpringSteelSheet.conductivity, (v) => "Thermal conductivity: " + v.toFixed(2) + " W/mK");
 
@@ -140,8 +141,6 @@ function resetSimulation() {
     timer = 0;
 
     updateStartButton();
-    
-    plot.reset();
 
     // Update material properties from UI
     materials.heater.conductivity = params.heater_conductivity.get();
@@ -210,7 +209,6 @@ function animate() {
 
     if (!isPaused || stepOnce) {
         stepOnce = false;
-        timer+=1;
 
         controlledWattage = simulation.iterate(
             params.target_temperature.get(),
@@ -221,7 +219,6 @@ function animate() {
             controlThermistorLocation,
         );
 
-        // Update plot
         if (timer < 900) {
             const l = controlThermistorLocation;
             const controlTemp = simulation.getTemperature(l[0], l[1], l[2]);
@@ -230,6 +227,7 @@ function animate() {
         }
 
         updateLabels();
+        timer+=1;
     }
 
     for (const p in params) {
