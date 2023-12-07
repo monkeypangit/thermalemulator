@@ -25,8 +25,8 @@ export class Simulation {
         this.countX = Math.round(this.sizeX / this.resolutionXY);
         this.countY = Math.round(this.sizeY / this.resolutionXY);
     
-        this.heaterCountX = this.heaterSizeX / this.resolutionXY;
-        this.heaterCountY = this.heaterSizeY / this.resolutionXY;
+        this.heaterCountX = Math.round(this.heaterSizeX / this.resolutionXY);
+        this.heaterCountY = Math.round(this.heaterSizeY / this.resolutionXY);
     
         this.layers = layers;
     

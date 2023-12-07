@@ -98,7 +98,7 @@ function init() {
     inflateParamter(params, true, 'heater_width', 80, 400, 5, 200, (v) =>"Width: " + v + " mm");
     inflateParamter(params, true, 'heater_height', 80, 400, 5, 200, (v) => "Depth: " + v + " mm)");
 
-    inflateParamter(params, true, 'magnetic_sticker_conductivity', 0.05, 0.5, 0.01, materials.magneticSticker.conductivity, (v) => "Thermal conductivity: " + v.toFixed(2) + " W/mK");
+    inflateParamter(params, true, 'magnetic_sticker_conductivity', 0.2, 2.0, 0.01, materials.magneticSticker.conductivity, (v) => "Thermal conductivity: " + v.toFixed(2) + " W/mK");
     inflateParamter(params, true, 'heater_conductivity', 0.2, 2.0, 0.01, materials.heater.conductivity, (v) => "Thermal conductivity: " + v.toFixed(2) + " W/mK");
     inflateParamter(params, true, 'pei_sheet_conductivity', 0.2, 2.0, 0.01, materials.peiSpringSteelSheet.conductivity, (v) => "Thermal conductivity: " + v.toFixed(2) + " W/mK");
 
